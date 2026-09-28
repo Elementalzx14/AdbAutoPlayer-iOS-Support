@@ -438,5 +438,16 @@
     ],
     "threshold": 0.9,
     "margin": 0
+  },
+  "ios/phantimal_next.png": {
+    "file": "phantimal_next.png",
+    "box": [
+      560,
+      1725,
+      1002,
+      1780
+    ],
+    "threshold": 0.91,
+    "margin": 45
   }
 }

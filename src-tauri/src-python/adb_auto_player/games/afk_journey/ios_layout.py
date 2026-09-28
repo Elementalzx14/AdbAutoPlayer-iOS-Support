@@ -20,6 +20,8 @@ from adb_auto_player.models.geometry import Box, Point
 from adb_auto_player.models.image_manipulation import CropRegions
 from adb_auto_player.models.template_matching import MatchMode, TemplateMatchResult
 
+from .battle_state import Mode
+
 
 class IOSLayoutMixin:
     @property
@@ -141,6 +143,10 @@ class IOSLayoutMixin:
                 for key in ("ios/victory_rewards.png", "ios/victory_progress.png")
             ):
                 return None
+            if self.battle_state.mode == Mode.SEASON_AFK_STAGES:
+                match = self._ios_match("ios/phantimal_next.png", frame, threshold)
+                if match:
+                    return replace(match, template=name)
         return self._ios_match(name, frame, threshold)
 
     def find_any_template(

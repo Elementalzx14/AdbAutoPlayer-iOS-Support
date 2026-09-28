@@ -102,6 +102,43 @@ def test_trial_victory_has_its_own_next_control(game):
     assert game.find_any_template(["next.png"], screenshot=frame).template == "next.png"
 
 
+def test_season_victory_advances_using_original_battle_handler(game):
+    frame = cv2.imread(str(DATA / "season-victory.png"))
+    game.battle_state.mode = Mode.SEASON_AFK_STAGES
+    game.get_screenshot = MagicMock(return_value=frame)
+    game.tap = MagicMock()
+    game.sleep_navigation = MagicMock()
+    assert game._is_battle_outcome_successful(1) is True
+    game.tap.assert_called_once()
+    target = game.tap.call_args.args[0]
+    assert target.template == "next.png"
+    assert 560 <= target.x <= 1002 and 1725 <= target.y <= 1780
+
+
+@pytest.mark.parametrize(
+    "missing", ["ios/victory_rewards.png", "ios/victory_progress.png"]
+)
+def test_season_next_requires_both_victory_markers(game, missing):
+    frame = cv2.imread(str(DATA / "season-victory.png"))
+    game.battle_state.mode = Mode.SEASON_AFK_STAGES
+    x1, y1, x2, y2 = game._ios_visuals[missing][0]["box"]
+    frame[y1:y2, x1:x2] = 0
+    assert game.game_find_template_match("next.png", screenshot=frame) is None
+
+
+def test_season_next_rejects_dimmed_and_wrong_mode_screens(game):
+    frame = cv2.imread(str(DATA / "season-victory.png"))
+    game.battle_state.mode = Mode.SEASON_AFK_STAGES
+    assert (
+        game.game_find_template_match(
+            "next.png", screenshot=(frame * 0.45).astype("uint8")
+        )
+        is None
+    )
+    game.battle_state.mode = Mode.AFK_STAGES
+    assert game.game_find_template_match("next.png", screenshot=frame) is None
+
+
 def test_dura_complete_and_legend_unavailable_states(game):
     frame = cv2.imread(str(DATA / "dura-complete.png"))
     assert game.game_find_template_match("duras_trials/sweep.png", screenshot=frame)

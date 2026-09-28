@@ -10,6 +10,9 @@ There is no separate iPhone battle runner or separate game configuration.
 
 - Original AFK routine: Battle Modes > AFK Stages, Records, copy, battle, victory,
   and advancement to the next stage. Saved settings: 3 attempts, 7 formations.
+- Season AFK: recognizes the Phantimal Challenge button after victory and advances
+  through the original battle handler. Stage 433 to 434 verified on the iPhone;
+  both victory markers are required before this button can be treated as Next.
 - Original Legend routine: Lightbearer floor won; a subsequent complete floor
   cycle copied a formation, won, recognized Next, and advanced. Tests were bounded
   so the app was not left running unattended.
