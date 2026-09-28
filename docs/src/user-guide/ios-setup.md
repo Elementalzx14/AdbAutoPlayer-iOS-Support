@@ -44,8 +44,9 @@ original Python dependencies are unchanged. The isolated ios-runtime is reused.
 ## Build and setup
 
 Build this fork using the [development guide](../development/dev-and-build.md).
-No prebuilt iOS-support release is published yet. Official upstream installers do
-not contain these changes.
+The Windows add-on installer targets the official **12.13.0 x64** installation.
+See [installer instructions](../../../scripts/windows/ios-installer/README.md).
+Official upstream installers alone do not contain the iOS changes.
 
 On Windows, install Python 3.11 and Apple's USB device support (Apple Devices),
 then connect exactly one iPhone, unlock it, and accept Trust This Computer.
