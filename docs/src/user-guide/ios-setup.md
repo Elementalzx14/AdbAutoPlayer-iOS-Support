@@ -37,9 +37,9 @@ menu modes are not fully validated. Manual-formation and hero-exclusion matching
 have image regression coverage, not exhaustive live coverage for every hero/skin.
 Changing game layouts may require additional recognition images.
 
-The navigation source includes upstream's locked-Dura check and its missing image
-for compatibility with the installed v12.12.2 resources. The UI executable and
-original Python dependencies are unchanged. The isolated ios-runtime is reused.
+The fork now includes upstream 12.13.0. The add-on installer preserves that
+release's UI executable and original Python dependencies, and bundles a separate
+iOS runtime. The older navigation-image fallback remains for development use.
 
 ## Build and setup
 

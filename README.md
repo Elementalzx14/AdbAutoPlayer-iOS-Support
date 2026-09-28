@@ -6,6 +6,11 @@ The original desktop interface, game settings, and task engine are preserved.
 **Enable iOS** selects the iPhone controller and visual profile; attempts,
 formations, and other game options still come from the existing Game Settings.
 
+**[Download the Windows iOS installer for 12.13.0 (Preview)](https://github.com/Elementalzx14/AdbAutoPlayer-iOS-Support/releases/tag/v12.13.0-ios.1).**
+Install official AdbAutoPlayer 12.13.0 first, close it, then run this add-on.
+Python and iOS connection dependencies are bundled. The installer preserves game
+settings and provides backups and restoration.
+
 See the [iOS setup and validation guide](docs/src/user-guide/ios-setup.md) and
 [Windows installer instructions](scripts/windows/ios-installer/README.md).
 AFK Stages uses **Battle Modes > AFK Stages**. AFK stage progression and a
