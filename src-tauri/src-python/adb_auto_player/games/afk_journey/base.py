@@ -363,7 +363,7 @@ class AFKJourneyBase(
             template="battle/copy.png",
             crop_regions=CropRegions(left=0.3, right=0.1, top=0.7, bottom=0.1),
             threshold=ConfidenceValue("75%"),
-            sleep_duration=1.5,
+            sleep_duration=0.5 if self.using_ios else 1.5,
         )
 
         cancel = self.game_find_template_match(
@@ -495,23 +495,24 @@ class AFKJourneyBase(
         """
         spend_gold: str = self._get_settings_for_mode("spend_gold")
 
-        result = self.wait_for_any_template(
-            templates=[
-                "battle/records.png",
-                "battle/formations_icon.png",
-                "battle/battle.png",
-            ],
-            crop_regions=CropRegions(top=0.5),
-            timeout=10,
-        )
+        if self.using_ios:
+            # Locate the actual button once; a preliminary Records screenshot
+            # adds a USB round trip without proving the Battle button is ready.
+            result = self.wait_for_template("battle/battle.png", timeout=10)
+        else:
+            result = self.wait_for_any_template(
+                templates=[
+                    "battle/records.png",
+                    "battle/formations_icon.png",
+                    "battle/battle.png",
+                ],
+                crop_regions=CropRegions(top=0.5),
+                timeout=10,
+            )
 
         try:
             # Tap immediately to avoid skipping due to visual glitches
-            battle_point = (
-                self.wait_for_template("battle/battle.png", timeout=self.min_timeout)
-                if self.using_ios
-                else Point(x=850, y=1780)
-            )
+            battle_point = result if self.using_ios else Point(x=850, y=1780)
             self.tap(battle_point)
             self._tap_coordinates_till_template_disappears(
                 coordinates=battle_point,

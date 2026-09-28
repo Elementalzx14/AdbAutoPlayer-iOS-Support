@@ -97,6 +97,47 @@ def test_current_formation_does_not_copy_suggestions(game):
     game._copy_suggested_formation.assert_not_called()
 
 
+def test_ios_start_uses_one_ready_button_capture_and_keeps_popup_checks(game):
+    frame = cv2.imread(str(DATA / "afk-copied.png"))
+    game.get_screenshot = MagicMock(return_value=frame)
+    game._get_settings_for_mode = MagicMock(return_value=False)
+    game.tap = MagicMock()
+    game._tap_coordinates_till_template_disappears = MagicMock()
+    game.sleep_action = MagicMock()
+    game.find_any_template = MagicMock(return_value=None)
+    game._click_confirm_on_popup = MagicMock(return_value=False)
+    assert game._start_battle() is True
+    game.get_screenshot.assert_called_once()
+    assert game.tap.call_args.args[0].template == "battle/battle.png"
+    game._tap_coordinates_till_template_disappears.assert_called_once()
+    game.find_any_template.assert_called_once_with(
+        ["battle/spend.png", "battle/gold.png"]
+    )
+    game._click_confirm_on_popup.assert_called_once()
+
+
+def test_ios_start_does_not_tap_when_button_never_becomes_ready(game):
+    from adb_auto_player.exceptions import GameTimeoutError
+
+    game._get_settings_for_mode = MagicMock(return_value=False)
+    game.wait_for_template = MagicMock(side_effect=GameTimeoutError("not ready"))
+    game.tap = MagicMock()
+    with pytest.raises(GameTimeoutError):
+        game._start_battle()
+    game.tap.assert_not_called()
+
+
+def test_faster_copy_still_rejects_locked_formation(game):
+    game._tap_till_template_disappears = MagicMock()
+    cancel = MagicMock()
+    game.game_find_template_match = MagicMock(return_value=cancel)
+    game.tap = MagicMock()
+    game._click_confirm_on_popup = MagicMock()
+    assert game._apply_current_formation() is False
+    game.tap.assert_called_once_with(cancel)
+    game._click_confirm_on_popup.assert_not_called()
+
+
 def test_trial_victory_has_its_own_next_control(game):
     frame = cv2.imread(str(DATA / "legend-victory.png"))
     assert game.find_any_template(["next.png"], screenshot=frame).template == "next.png"
