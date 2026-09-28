@@ -52,6 +52,7 @@ from typing import Any, Literal, NoReturn, Optional
 
 from adb_auto_player.commands import log_debug_info
 from adb_auto_player.device.adb import AdbClientHelper, AdbController
+from adb_auto_player.device.task_dispatch import execute_for_device
 from adb_auto_player.device.adb.adb_scanner import (
     scan_emulator_ports as scan_emulator_ports_impl,
 )
@@ -66,7 +67,6 @@ from adb_auto_player.task_loader import get_game_tasks
 from adb_auto_player.tauri_context import TauriContext
 from adb_auto_player.tauri_helpers import get_game_gui_options, get_game_metadata
 from adb_auto_player.util import (
-    Execute,
     LogMessageFactory,
     RuntimeInfo,
     StringHelper,
@@ -103,6 +103,7 @@ commands: Commands = Commands(experimental_gen_ts=PYTAURI_GEN_TS)
 task_processes: dict[int, Process | None] = {}
 task_listeners: dict[int, QueueListener | None] = {}
 task_labels: dict[int, str | None] = {}
+task_stop_events: dict[int, Any] = {}
 # Queue | None breaks on macOS standalone build because Queue is seen as function.
 task_summary_queues: dict[int, Optional[Queue]] = {}  # noqa: UP045
 
@@ -219,12 +220,13 @@ def _setup_logging() -> None:
     logger.setLevel(logging.DEBUG)
 
 
-def run_task(
+def run_task(  # noqa: PLR0917 -- multiprocessing target
     command: str,
     log_queue: Queue,
     summary_queue: Queue,
     app_config_dir: Path,
     resource_dir: Path,
+    stop_event=None,
 ) -> None:
     """Wrapper to run task in a separate process."""
     queue_handler = QueueHandler(log_queue)
@@ -251,7 +253,11 @@ def run_task(
     SettingsLoader.set_resource_dir(resource_dir)
 
     try:
-        e = Execute.find_command_and_execute(command, get_game_tasks())
+        e = execute_for_device(
+            command,
+            get_game_tasks(),
+            stop=stop_event.is_set if stop_event is not None else None,
+        )
         if isinstance(e, BaseException):
             logging.error(e, exc_info=e)
             sys.exit(1)
@@ -304,6 +310,12 @@ async def start_task(
         task_listeners[body.profile_index] = listener
         listener.start()
 
+        stop_event = (
+            multiprocessing.Event()
+            if SettingsLoader.adb_settings().ios.enabled
+            else None
+        )
+        task_stop_events[body.profile_index] = stop_event
         task_process = Process(
             target=run_task,
             args=(
@@ -312,6 +324,7 @@ async def start_task(
                 summary_queue,
                 _base_app_config_dir / f"{body.profile_index}",
                 _base_resource_dir,
+                stop_event,
             ),
         )
 
@@ -323,6 +336,7 @@ async def start_task(
             await asyncio.sleep(0.5)
 
         task_processes[body.profile_index] = None
+        task_stop_events.pop(body.profile_index, None)
         task_labels[body.profile_index] = None
 
         listener = task_listeners.get(body.profile_index, None)
@@ -384,7 +398,16 @@ async def stop_task(
     task_process = task_processes.get(body.profile_index, None)
     if task_process and task_process.is_alive():
         logging.info("Stopping Task")
-        task_process.terminate()
+        stop_event = task_stop_events.get(body.profile_index)
+        if stop_event is not None:
+            stop_event.set()
+            # Give the current USB request time to finish and close the tunnel.
+            for _ in range(100):
+                if not task_process.is_alive():
+                    break
+                await asyncio.sleep(0.5)
+        if task_process.is_alive():
+            task_process.terminate()
         task_process.join()
         await asyncio.sleep(0.5)  # wait a bit for start_task tear down
 
@@ -398,6 +421,10 @@ def _cache_clear(
     profile_index: int | None = None,
 ) -> None:
     """Clear cache for a specific group."""
+    if group == CacheGroup.ADB_SETTINGS:
+        # The registry contains the inner loader, but the profile cache wraps
+        # adb_settings itself. Invalidate that cache when switching device modes.
+        SettingsLoader.adb_settings.cache_clear(profile_index)
     for func, profile_aware in CACHE_REGISTRY.get(group, []):
         if cache_clear_func := getattr(func, "cache_clear", None):
             if profile_aware and profile_index is not None:
@@ -413,6 +440,12 @@ async def debug(
 ) -> None:
     for group in CacheGroup:
         _cache_clear(group, body.profile_index)
+    if SettingsLoader.adb_settings().ios.enabled:
+        from adb_auto_player.device.ios.integration import connected_device  # noqa: PLC0415 -- optional runtime
+
+        device = await asyncio.to_thread(connected_device)
+        logging.info("iOS USB: %s", device or "connect one unlocked, trusted iPhone")
+        return
     log_debug_info()
 
 
@@ -479,6 +512,18 @@ def _get_state_sync(profile_index: int) -> ProfileState:
     Context variables are already set by copy_context().
     """
     try:
+        if SettingsLoader.adb_settings().ios.enabled:
+            from adb_auto_player.device.ios.integration import (  # noqa: PLC0415 -- optional runtime
+                connected_device,
+                game_menu,
+            )
+
+            device = connected_device()
+            return ProfileState(
+                game_menu=game_menu() if device else None,
+                device_id=device,
+                active_task=task_labels.get(profile_index),
+            )
         state = ProfileState(
             game_menu=get_game_gui_options(),
             device_id=AdbController().d.serial,

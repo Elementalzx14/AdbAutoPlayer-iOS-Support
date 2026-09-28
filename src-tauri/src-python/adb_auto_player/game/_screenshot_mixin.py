@@ -25,6 +25,8 @@ class _ScreenshotMixin(_GameBase):
 
     def start_stream(self) -> None:
         """Start the H264 device stream."""
+        if SettingsLoader.adb_settings().ios.enabled:
+            return  # Apple USB screenshots are supplied by the device backend.
         try:
             self._stream = DeviceStream(self.device)
         except AutoPlayerWarningError as e:
@@ -140,6 +142,8 @@ class _ScreenshotMixin(_GameBase):
             sys.exit(1)
 
     def _set_device_resolution(self) -> None:
+        if SettingsLoader.adb_settings().ios.enabled:
+            return  # The Apple backend maps the logical game canvas to native pixels.
         if not SettingsLoader.adb_settings().device.use_wm_resize:
             return
         if not self.base_resolution == self.display_info.normalized_resolution:

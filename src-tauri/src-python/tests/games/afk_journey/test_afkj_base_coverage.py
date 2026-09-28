@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from adb_auto_player.exceptions import GameActionFailedError, GameTimeoutError
 from adb_auto_player.games.afk_journey.base import AFKJourneyBase
@@ -27,10 +27,18 @@ class TestAFKJourneyBaseCoverage:
         bot.wait_for_any_template = MagicMock(return_value=match_result)
 
         # Mock _tap_coordinates_till_template_disappears to raise GameActionFailedError
-        with patch.object(
-            bot,
-            "_tap_coordinates_till_template_disappears",
-            side_effect=GameActionFailedError("test"),
+        with (
+            patch.object(
+                bot,
+                "_tap_coordinates_till_template_disappears",
+                side_effect=GameActionFailedError("test"),
+            ),
+            patch.object(
+                AFKJourneyBase,
+                "using_ios",
+                new_callable=PropertyMock,
+                return_value=False,
+            ),
         ):
             # The method should return False when GameActionFailedError is caught
             assert bot._start_battle() is False

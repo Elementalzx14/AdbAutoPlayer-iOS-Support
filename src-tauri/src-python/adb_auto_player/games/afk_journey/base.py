@@ -30,6 +30,7 @@ from .gui_category import AFKJCategory
 from .mixins.dream_realm import DreamRealmMixin
 from .mixins.guild_member_scan import GuildMemberScanMixin
 from .mixins.hero_scanner import HeroScannerMixin
+from .ios_layout import IOSLayoutMixin
 from .navigation import Navigation
 from .settings import Settings
 
@@ -43,6 +44,7 @@ from .settings import Settings
     ),
 )
 class AFKJourneyBase(
+    IOSLayoutMixin,
     Navigation,
     HeroScannerMixin,
     DreamRealmMixin,
@@ -505,9 +507,14 @@ class AFKJourneyBase(
 
         try:
             # Tap immediately to avoid skipping due to visual glitches
-            self.tap(Point(x=850, y=1780))
+            battle_point = (
+                self.wait_for_template("battle/battle.png", timeout=self.min_timeout)
+                if self.using_ios
+                else Point(x=850, y=1780)
+            )
+            self.tap(battle_point)
             self._tap_coordinates_till_template_disappears(
-                coordinates=Point(x=850, y=1780),
+                coordinates=battle_point,
                 template=result.template,
                 crop_regions=CropRegions(top=0.5),
                 delay=2.0,

@@ -10,6 +10,7 @@ from adb_auto_player.exceptions import (
     GenericAdbUnrecoverableError,
 )
 from adb_auto_player.game import Game
+from adb_auto_player.file_loader import SettingsLoader
 from adb_auto_player.ipc import GameGUIOptions
 from adb_auto_player.ipc_util import IPCModelConverter
 from adb_auto_player.models.decorators import CacheGroup
@@ -41,6 +42,11 @@ def get_game_metadata() -> GameMetadata | None:
         str | None: The title of the running game, or None if no known game is
         detected.
     """
+    if SettingsLoader.adb_settings().ios.enabled:
+        return next(
+            (game for game in GAME_REGISTRY.values() if game.name == "AFK Journey"),
+            None,
+        )
     try:
         return _get_game_metadata_from_package_name(AdbController().get_running_app())
     except (GenericAdbError, GenericAdbUnrecoverableError) as e:

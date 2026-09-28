@@ -57,3 +57,11 @@ vite.config.ts.timestamp-*
 **/data/screenshots/
 /src-tauri/src-python/scratch/
 /scratch/
+
+# Local iOS runtimes, device data, and retired prototype assets
+__pycache__/
+*.pyc
+ios-runtime/
+device-cache/
+ios-runs/
+/src-tauri/src-python/adb_auto_player/device/ios/templates/

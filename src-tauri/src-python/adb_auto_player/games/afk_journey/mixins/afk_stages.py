@@ -79,6 +79,15 @@ class AFKStagesMixin(AFKJourneyBase):
 
     def _select_afk_stage(self) -> None:
         """Selects an AFK stage template."""
+        if self.using_ios:
+            template = (
+                "ios/stage_season.png"
+                if self.battle_state.mode == Mode.SEASON_AFK_STAGES
+                else "afk_stages/season_battle.png"
+            )
+            self.tap(self.wait_for_template(template, timeout=self.min_timeout))
+            self.sleep_navigation()
+            return
         if self.battle_state.mode == Mode.SEASON_AFK_STAGES:
             try:
                 result = self.wait_for_template(

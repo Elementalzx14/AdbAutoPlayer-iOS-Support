@@ -1,0 +1,1 @@
+These regression canvases retain only observed game controls and, in legend-records, the game hero portrait row. Account names, player avatars, and unrelated screen content are omitted. Coordinates remain at the normalized 1080 x 1920 resolution. Raw device captures are not distributed.

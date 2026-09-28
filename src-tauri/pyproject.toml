@@ -48,3 +48,6 @@ find = { where = ["src-python"], exclude = ["tests*", "*/tests*"] }
 
 [tool.setuptools.package-data]
 "*" = ["*.pyd", "*.so"]
+"adb_auto_player.device.ios" = ["requirements.txt"]
+
+"adb_auto_player.games.afk_journey" = ["ios_templates/*.png", "ios_templates/*.json"]

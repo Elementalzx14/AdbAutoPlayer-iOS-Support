@@ -7,9 +7,10 @@ from pathlib import Path
 
 from adb_auto_player.cli import ArgparseHelper
 from adb_auto_player.file_loader import SettingsLoader
+from adb_auto_player.device.task_dispatch import execute_for_device
 from adb_auto_player.log import setup_logging
 from adb_auto_player.task_loader import get_game_tasks
-from adb_auto_player.util import DevHelper, Execute
+from adb_auto_player.util import DevHelper
 
 
 @lru_cache
@@ -81,7 +82,7 @@ def main() -> None:
     SettingsLoader.set_app_config_dir(app_config_dir)
     SettingsLoader.set_resource_dir(resource_dir)
 
-    e = Execute.find_command_and_execute(args.command, get_game_tasks())
+    e = execute_for_device(args.command, get_game_tasks())
     if isinstance(e, BaseException):
         logging.error(e, exc_info=e)
         sys.exit(1)

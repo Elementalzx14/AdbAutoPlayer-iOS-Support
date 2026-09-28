@@ -308,6 +308,12 @@ class Navigation(PopupMessageHandler, ABC):
             "battle_modes/afk_stage.png", ConfidenceValue("75%")
         )
 
+        if self.using_ios:
+            self.wait_for_template(
+                "afk_stages/season_battle.png", timeout=self.navigation_timeout
+            )
+            return
+
         try:
             self.wait_for_template(
                 template="navigation/resonating_hall_label.png",
@@ -322,7 +328,14 @@ class Navigation(PopupMessageHandler, ABC):
         self.sleep_action()
 
     def _navigate_to_battle_modes_screen(self) -> None:
-        self.tap(self.BATTLE_MODES_POINT)
+        target = (
+            self.wait_for_template(
+                "ios/world_modes.png", timeout=self.navigation_timeout
+            )
+            if self.using_ios
+            else self.BATTLE_MODES_POINT
+        )
+        self.tap(target)
         result = self.wait_for_any_template(
             templates=[
                 "battle_modes/afk_stage.png",
@@ -353,6 +366,10 @@ class Navigation(PopupMessageHandler, ABC):
         )
 
     def navigate_to_battle_modes_screen(self) -> None:
+        if self.using_ios and self.game_find_template_match(
+            "battle_modes/afk_stage.png"
+        ):
+            return
         attempt = 0
         max_attempts = 3
         while True:

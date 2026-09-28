@@ -86,7 +86,12 @@ class Game(
     def device(self) -> AdbController:
         """Lazily-initialised ADB device controller."""
         if self._device is None:
-            self._device = AdbController()
+            if SettingsLoader.adb_settings().ios.enabled:
+                from adb_auto_player.device.ios.controller import IOSController
+
+                self._device = IOSController(self.base_resolution)
+            else:
+                self._device = AdbController()
         return self._device
 
     @property

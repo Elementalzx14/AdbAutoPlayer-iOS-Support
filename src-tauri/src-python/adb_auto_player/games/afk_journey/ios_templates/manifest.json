@@ -1,0 +1,442 @@
+{
+  "navigation/resonating_hall_shortcut.png": {
+    "file": "world_modes.png",
+    "box": [
+      384,
+      1811,
+      543,
+      1839
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "ios/world_modes.png": {
+    "file": "world_modes.png",
+    "box": [
+      384,
+      1811,
+      543,
+      1839
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "battle_modes/afk_stage.png": {
+    "file": "afk_card.png",
+    "box": [
+      50,
+      654,
+      339,
+      709
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "ios/stage.png": {
+    "file": "stage_title.png",
+    "box": [
+      92,
+      1012,
+      395,
+      1071
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "afk_stages/season_battle.png": {
+    "file": "stage_battle.png",
+    "box": [
+      767,
+      1566,
+      929,
+      1616
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "ios/stage_season.png": {
+    "file": "stage_season.png",
+    "box": [
+      180,
+      1559,
+      487,
+      1628
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "battle/records.png": {
+    "file": "formation_records.png",
+    "box": [
+      242,
+      1762,
+      352,
+      1791
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "battle/battle.png": {
+    "file": "formation_battle.png",
+    "box": [
+      817,
+      1718,
+      1004,
+      1769
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "battle/copy.png": {
+    "file": "copy.png",
+    "box": [
+      553,
+      1481,
+      712,
+      1535
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "battle/formation_next.png": {
+    "file": "formation_next.png",
+    "box": [
+      962,
+      1012,
+      1016,
+      1073
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "retry.png": {
+    "file": "retry.png",
+    "box": [
+      668,
+      1745,
+      827,
+      1798
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "next.png": {
+    "file": "victory_battle.png",
+    "box": [
+      669,
+      1730,
+      831,
+      1779
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "ios/back.png": {
+    "file": "back.png",
+    "box": [
+      34,
+      1716,
+      159,
+      1777
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "ios/records_close.png": {
+    "file": "records_close.png",
+    "box": [
+      424,
+      1743,
+      644,
+      1790
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "ios/owned_checked.png": {
+    "file": "owned_checked.png",
+    "box": [
+      44,
+      146,
+      107,
+      198
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "ios/owned_unchecked.png": {
+    "file": "owned_unchecked.png",
+    "box": [
+      44,
+      146,
+      107,
+      198
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "ios/records.png": {
+    "file": "records_title.png",
+    "box": [
+      356,
+      323,
+      606,
+      372
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "ios/disconnect.png": {
+    "file": "disconnect.png",
+    "box": [
+      153,
+      804,
+      951,
+      903
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "ios/victory_rewards.png": {
+    "file": "victory_rewards.png",
+    "box": [
+      338,
+      1200,
+      740,
+      1233
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "ios/victory_progress.png": {
+    "file": "victory_progress.png",
+    "box": [
+      86,
+      1267,
+      409,
+      1301
+    ],
+    "threshold": 0.91,
+    "margin": 65
+  },
+  "navigation/resonating_hall_back.png": {
+    "file": "hall_back.png",
+    "box": [
+      52,
+      1760,
+      136,
+      1815
+    ],
+    "threshold": 0.91,
+    "margin": 45
+  },
+  "battle_modes/duras_trials.png": {
+    "file": "duras_card.png",
+    "box": [
+      50,
+      1098,
+      335,
+      1148
+    ],
+    "threshold": 0.91,
+    "margin": 70
+  },
+  "battle_modes/legend_trial.png": {
+    "file": "legend_card.png",
+    "box": [
+      50,
+      1535,
+      337,
+      1590
+    ],
+    "threshold": 0.91,
+    "margin": 70
+  },
+  "duras_trials/socketed_charms_overview.png": {
+    "file": "dura_overview.png",
+    "box": [
+      920,
+      352,
+      1018,
+      432
+    ],
+    "threshold": 0.91,
+    "margin": 70
+  },
+  "duras_trials/sweep.png": {
+    "file": "dura_sweep.png",
+    "box": [
+      547,
+      1570,
+      720,
+      1625
+    ],
+    "threshold": 0.91,
+    "margin": 70
+  },
+  "legend_trials/s_header.png": {
+    "file": "legend_header.png",
+    "box": [
+      211,
+      219,
+      640,
+      277
+    ],
+    "threshold": 0.91,
+    "margin": 60
+  },
+  "legend_trials/banner_lightbearer.png": {
+    "file": "legend_light.png",
+    "box": [
+      109,
+      594,
+      462,
+      647
+    ],
+    "threshold": 0.91,
+    "margin": 60
+  },
+  "legend_trials/banner_wilder.png": {
+    "file": "legend_wilder.png",
+    "box": [
+      102,
+      825,
+      470,
+      876
+    ],
+    "threshold": 0.91,
+    "margin": 60
+  },
+  "legend_trials/banner_graveborn.png": {
+    "file": "legend_graveborn.png",
+    "box": [
+      143,
+      1056,
+      505,
+      1100
+    ],
+    "threshold": 0.91,
+    "margin": 60
+  },
+  "legend_trials/banner_mauler.png": {
+    "file": "legend_mauler.png",
+    "box": [
+      112,
+      1287,
+      460,
+      1338
+    ],
+    "threshold": 0.91,
+    "margin": 60
+  },
+  "legend_trials/faction_icon_lightbearer.png": {
+    "file": "legend_unavailable.png",
+    "box": [
+      175,
+      750,
+      382,
+      782
+    ],
+    "threshold": 0.91,
+    "margin": 40
+  },
+  "legend_trials/faction_icon_wilder.png": {
+    "file": "legend_unavailable.png",
+    "box": [
+      175,
+      985,
+      382,
+      1017
+    ],
+    "threshold": 0.91,
+    "margin": 40
+  },
+  "legend_trials/faction_icon_graveborn.png": {
+    "file": "legend_unavailable_graveborn.png",
+    "box": [
+      219,
+      1201,
+      449,
+      1235
+    ],
+    "threshold": 0.91,
+    "margin": 40
+  },
+  "legend_trials/faction_icon_mauler.png": {
+    "file": "legend_unavailable_mauler.png",
+    "box": [
+      205,
+      1440,
+      434,
+      1475
+    ],
+    "threshold": 0.91,
+    "margin": 40
+  },
+  "legend_trials/tower_icon_lightbearer.png": {
+    "file": "tower_light.png",
+    "box": [
+      40,
+      154,
+      146,
+      252
+    ],
+    "threshold": 0.91,
+    "margin": 60
+  },
+  "legend_trials/challenge_ch.png": {
+    "file": "legend_challenge.png",
+    "box": [
+      0,
+      350,
+      1080,
+      1660
+    ],
+    "threshold": 0.91,
+    "margin": 0
+  },
+  "ios/next.png": {
+    "file": "trial_next.png",
+    "box": [
+      678,
+      1720,
+      821,
+      1775
+    ],
+    "threshold": 0.91,
+    "margin": 60
+  },
+  "ios/trial_rewards.png": {
+    "file": "trial_rewards.png",
+    "box": [
+      392,
+      1182,
+      677,
+      1215
+    ],
+    "threshold": 0.91,
+    "margin": 60
+  },
+  "battle/manual_battle.png": {
+    "file": "manual.png",
+    "box": [
+      170,
+      420,
+      490,
+      540
+    ],
+    "threshold": 0.9,
+    "margin": 0
+  },
+  "battle/manual_battle_old1.png": {
+    "file": "manual.png",
+    "box": [
+      170,
+      420,
+      490,
+      540
+    ],
+    "threshold": 0.9,
+    "margin": 0
+  }
+}

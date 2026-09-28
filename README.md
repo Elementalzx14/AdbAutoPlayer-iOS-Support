@@ -1,4 +1,21 @@
-# AdbAutoPlayer
+# AdbAutoPlayer iOS Support
+
+Experimental Windows USB support for iPhone, based on
+[AdbAutoPlayer/AdbAutoPlayer](https://github.com/AdbAutoPlayer/AdbAutoPlayer).
+The original desktop interface, game settings, and task engine are preserved.
+**Enable iOS** selects the iPhone controller and visual profile; attempts,
+formations, and other game options still come from the existing Game Settings.
+
+See the [iOS setup and validation guide](docs/src/user-guide/ios-setup.md).
+AFK Stages uses **Battle Modes > AFK Stages**. AFK stage progression and a
+Lightbearer Legend Trial cycle were verified on an English portrait iPhone 17 Pro
+Max running iOS 27. Dura's already-cleared state was verified; fresh Dura battles,
+other towers, other devices, and other task modes need further testing.
+
+This is an independent experimental fork, not an official upstream release.
+The tested source base is upstream commit `a64f7f2` (12.12.3 era); it does not
+claim to include later upstream features. The original MIT license and credits
+are retained. Upstream project information follows.
 [![codecov](https://codecov.io/github/AdbAutoPlayer/AdbAutoPlayer/branch/main/graph/badge.svg?token=0VCZKXZO9P)](https://app.codecov.io/github/AdbAutoPlayer/AdbAutoPlayer)  
 
 ## Modern & Customizable Android Game Bot
