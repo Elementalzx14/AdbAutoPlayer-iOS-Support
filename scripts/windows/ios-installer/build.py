@@ -1,14 +1,14 @@
-"""Build the offline Windows add-on from official stock and a portable runtime."""
+"""Build a version-checked offline overlay using the app's Python 3.13."""
 
 import argparse
 import hashlib
 import json
 import os
+from pathlib import Path
 import shutil
 import subprocess
 import tempfile
 import zipfile
-from pathlib import Path
 
 
 def digest(path):
@@ -20,52 +20,71 @@ def digest(path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--stock", required=True, type=Path)
-    parser.add_argument("--runtime", required=True, type=Path)
-    parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--stock", type=Path, required=True)
+    parser.add_argument("--prepared", type=Path, required=True)
+    parser.add_argument("--bootstrap", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     here = Path(__file__).resolve().parent
     repo = here.parents[2]
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     prefix = "src-tauri/src-python/adb_auto_player/"
-    files = subprocess.check_output(
+    backend = subprocess.check_output(
         ["git", "diff", "--name-only", "12.13.0", "--", prefix], cwd=repo, text=True
     ).splitlines()
+    files = {}
+    for file in backend:
+        source = repo / file
+        if not source.is_file():
+            raise RuntimeError("Deleted stock backend files are unsupported: " + file)
+        files["Lib/site-packages/adb_auto_player/" + file[len(prefix) :]] = source
+    for source in (args.prepared / "Lib/site-packages").rglob("*"):
+        if (
+            not source.is_file()
+            or "__pycache__" in source.parts
+            or source.suffix == ".pyc"
+        ):
+            continue
+        relative = source.relative_to(args.prepared).as_posix()
+        original = args.stock / relative
+        if not original.exists() or digest(source) != digest(original):
+            files.setdefault(relative, source)
     manifest = {
-        "version": "12.13.0-ios.1",
-        "exe_sha256": digest(args.stock / "adb-auto-player.exe"),
+        "format": 2,
+        "version": "12.13.0-ios.2",
         "files": [],
-        "runtime": {},
+        "base": {
+            name: digest(args.stock / name)
+            for name in ("adb-auto-player.exe", "python.exe")
+        },
     }
     with tempfile.TemporaryDirectory(prefix="adb-ios-build-") as scratch:
-        payload = Path(scratch)
-        archive = payload / "payload.zip"
+        archive = Path(scratch) / "payload.zip"
         with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
-            for file in files:
-                rel = file[len(prefix) :]
-                src = repo / file
-                stock = args.stock / "Lib/site-packages/adb_auto_player" / rel
-                if not src.is_file():
-                    raise RuntimeError(
-                        "Deleted backend files are not supported: " + file
-                    )
+            for relative, source in sorted(files.items()):
+                original = args.stock / relative
                 manifest["files"].append(
                     {
-                        "path": rel,
-                        "current": digest(src),
-                        "stock": digest(stock) if stock.exists() else None,
+                        "path": relative,
+                        "current": digest(source),
+                        "stock": digest(original) if original.exists() else None,
                     }
                 )
-                z.write(src, "files/" + rel)
-            for p in args.runtime.rglob("*"):
-                if not p.is_file() or "__pycache__" in p.parts or p.suffix == ".pyc":
-                    continue
-                rel = p.relative_to(args.runtime).as_posix()
-                manifest["runtime"][rel] = digest(p)
-                z.write(p, "runtime/" + rel)
+                z.write(source, "files/" + relative)
+            for source in args.bootstrap.rglob("*"):
+                if (
+                    source.is_file()
+                    and "__pycache__" not in source.parts
+                    and source.suffix != ".pyc"
+                ):
+                    z.write(
+                        source,
+                        "bootstrap/" + source.relative_to(args.bootstrap).as_posix(),
+                    )
             z.writestr("manifest.json", json.dumps(manifest, indent=2))
-            z.write(here / "install.py", "install.py")
+            for name in ("install.py", "legacy_install.py"):
+                z.write(here / name, name)
             z.write(repo / "LICENSE", "LICENSE-AdbAutoPlayer.txt")
         compiler = (
             Path(os.environ["WINDIR"]) / "Microsoft.NET/Framework64/v4.0.30319/csc.exe"
@@ -89,8 +108,11 @@ def main():
     output.with_suffix(".exe.sha256").write_text(
         digest(output) + "  " + output.name + "\n"
     )
-    shutil.copy2(here / "README.md", output.parent / "INSTALL-iOS-Support.md")
-    print(str(output))
+    output.with_suffix(".manifest.json").write_text(json.dumps(manifest, indent=2))
+    shutil.copy2(here / "README.md", output.parent / "INSTALL-iOS-Support-v2.md")
+    print(
+        f"Built {output.name}: {len(files)} files; {output.stat().st_size / 1024 / 1024:.1f} MiB"
+    )
 
 
 if __name__ == "__main__":

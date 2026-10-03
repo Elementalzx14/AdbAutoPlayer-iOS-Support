@@ -1,13 +1,18 @@
-"""Version-checked iOS add-on installer. Does not write user settings."""
+"""Offline iOS dependency overlay for the official 12.13.0 Windows app."""
 
 import argparse
 import hashlib
+import importlib.util
 import json
+import os
 import shutil
 import subprocess
 import sys
 import uuid
 from pathlib import Path
+
+MARKER = "ios-support-install.json"
+PENDING = "ios-support-pending.json"
 
 
 def digest(path):
@@ -18,8 +23,9 @@ def digest(path):
 
 
 def inside(root, relative):
+    root = root.resolve()
     path = (root / relative).resolve()
-    if not path.is_relative_to(root.resolve()) or path == root.resolve():
+    if not path.is_relative_to(root) or path == root:
         raise ValueError("Invalid installer path")
     return path
 
@@ -38,50 +44,85 @@ def idle(app):
             continue
 
 
+def atomic_copy(source, target):
+    """Keep every destination either old or new if setup is interrupted."""
+    temporary = target.with_name(target.name + ".ios-staging-" + uuid.uuid4().hex)
+    try:
+        shutil.copy2(source, temporary)
+        temporary.replace(target)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def check(app, payload):
     manifest = json.loads((payload / "manifest.json").read_text())
-    exe = app / "adb-auto-player.exe"
-    if not exe.is_file() or digest(exe) != manifest["exe_sha256"]:
+    if (app / PENDING).exists():
         raise RuntimeError(
-            "Install the official Windows x64 AdbAutoPlayer 12.13.0 release first, then select its folder."
+            "An interrupted setup was found. Choose Restore previous files first."
         )
+    if (app / MARKER).exists():
+        raise RuntimeError(
+            "An iOS preview is already installed. Choose Restore previous files, then Install iOS Support to update. Your game settings are preserved."
+        )
+    for name, expected in manifest["base"].items():
+        target = inside(app, name)
+        if not target.is_file() or digest(target) != expected:
+            raise RuntimeError(
+                "Install official Windows x64 AdbAutoPlayer 12.13.0 first, then select its folder."
+            )
     idle(app)
-    package = app / "Lib/site-packages/adb_auto_player"
     for item in manifest["files"]:
-        target = inside(package, item["path"])
         source = inside(payload / "files", item["path"])
-        if digest(source) != item["current"]:
+        target = inside(app, item["path"])
+        if not source.is_file() or digest(source) != item["current"]:
             raise RuntimeError("Installer payload is damaged: " + item["path"])
         if target.exists():
-            if digest(target) not in (item["stock"], item["current"]):
-                raise RuntimeError(
-                    "An unexpected app modification was found: " + item["path"]
-                )
+            if not target.is_file() or digest(target) != item["stock"]:
+                raise RuntimeError("Unexpected app modification: " + item["path"])
         elif item["stock"] is not None:
             raise RuntimeError("The app installation is incomplete: " + item["path"])
-    for name, expected in manifest["runtime"].items():
-        if digest(inside(payload / "runtime", name)) != expected:
-            raise RuntimeError("Bundled runtime is damaged: " + name)
     return manifest
+
+
+def validate_runtime(app):
+    environment = {
+        k: v
+        for k, v in os.environ.items()
+        if k.upper() not in {"PYTHONHOME", "PYTHONPATH", "VIRTUAL_ENV"}
+    }
+    result = subprocess.run(
+        [
+            str(app / "python.exe"),
+            "-I",
+            "-B",
+            "-c",
+            "import sys,cv2,numpy,psutil; assert sys.version_info[:2]==(3,13); "
+            "from pymobiledevice3.remote.userspace_tunnel import UserspaceRsdTunnel; "
+            "from adb_auto_player.device.ios.phone import Phone; "
+            "from adb_auto_player.device.ios.geometry import Canvas",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        env=environment,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+    if result.returncode:
+        raise RuntimeError("iOS dependency check failed: " + result.stderr[-2000:])
 
 
 def install(app, payload):
     manifest = check(app, payload)
-    marker = app / "ios-support-install.json"
-    if marker.exists():
-        raise RuntimeError(
-            "iOS support is already installed. Use Restore first to reinstall."
-        )
     backup = inside(app, "ios-support-backups/" + uuid.uuid4().hex)
     backup.mkdir(parents=True)
-    package = app / "Lib/site-packages/adb_auto_player"
     state = {
-        "files": [],
-        "runtime_existed": (app / "ios-runtime").exists(),
+        "format": 2,
+        "version": manifest["version"],
         "backup": str(backup.relative_to(app)),
+        "files": [],
     }
     for item in manifest["files"]:
-        target = inside(package, item["path"])
+        target = inside(app, item["path"])
         entry = dict(item, existed=target.exists())
         if target.exists():
             saved = inside(backup / "files", item["path"])
@@ -89,89 +130,78 @@ def install(app, payload):
             shutil.copy2(target, saved)
             entry["backup_hash"] = digest(saved)
         state["files"].append(entry)
-    (backup / "state.json").write_text(json.dumps(state, indent=2))
-    staging = inside(app, "ios-runtime-staging-" + uuid.uuid4().hex)
-    runtime_moved = False
-    runtime_installed = False
-    changed = []
+    state_text = json.dumps(state, indent=2)
+    (backup / "state.json").write_text(state_text)
+    (app / PENDING).write_text(state_text)
     try:
-        shutil.copytree(payload / "runtime", staging)
-        subprocess.run(
-            [
-                str(staging / "Scripts/python.exe"),
-                "-c",
-                "import cv2, psutil; from pymobiledevice3.remote.userspace_tunnel import UserspaceRsdTunnel",
-            ],
-            check=True,
-            timeout=60,
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-        )
         idle(app)
-        if state["runtime_existed"]:
-            (app / "ios-runtime").rename(backup / "runtime")
-            runtime_moved = True
-        staging.rename(app / "ios-runtime")
-        runtime_installed = True
         for item in state["files"]:
-            target = inside(package, item["path"])
+            target = inside(app, item["path"])
             target.parent.mkdir(parents=True, exist_ok=True)
-            changed.append(item)
-            shutil.copy2(inside(payload / "files", item["path"]), target)
-        marker.write_text(json.dumps(state, indent=2))
+            atomic_copy(inside(payload / "files", item["path"]), target)
+        validate_runtime(app)
+        (app / PENDING).replace(app / MARKER)
     except BaseException:
-        for item in reversed(changed):
-            target = inside(package, item["path"])
-            if item["existed"]:
-                shutil.copy2(inside(backup / "files", item["path"]), target)
-            elif target.exists():
-                target.unlink()
-        if runtime_installed:
-            shutil.rmtree(inside(app, "ios-runtime"))
-        if runtime_moved:
-            (backup / "runtime").rename(app / "ios-runtime")
-        if staging.exists():
-            shutil.rmtree(inside(app, staging.name))
-        if marker.exists():
-            marker.unlink()
+        # Our own failed write may be partial; backups were verified before writes.
+        # Pending state allows recovery via Restore if cleanup itself is interrupted.
+        restore_files(app, state)
+        (app / PENDING).unlink(missing_ok=True)
         raise
-    print("Installed iOS support for 12.13.0. Your game settings were preserved.")
+    print("Installed iOS Support v2 for AdbAutoPlayer 12.13.0.")
+    print("Uses the app's Python 3.13. No separate iOS runtime was installed.")
     print(
-        "Open ADB Settings > iPhone / iOS > Enable iOS. Leave iOS Python Path blank to use the bundled runtime."
+        "Game settings were preserved. Enable iOS in ADB Settings and leave iOS Python Path blank."
     )
+
+
+def restore_files(app, state):
+    backup = inside(app, state["backup"])
+    for item in state["files"]:
+        if item["existed"]:
+            saved = inside(backup / "files", item["path"])
+            if not saved.is_file() or digest(saved) != item["backup_hash"]:
+                raise RuntimeError("Backup validation failed: " + item["path"])
+    for item in reversed(state["files"]):
+        target = inside(app, item["path"])
+        if item["existed"]:
+            atomic_copy(inside(backup / "files", item["path"]), target)
+        else:
+            target.unlink(missing_ok=True)
 
 
 def restore(app):
     idle(app)
-    marker = app / "ios-support-install.json"
-    if not marker.is_file():
+    marker, pending = app / MARKER, app / PENDING
+    if not marker.exists() and not pending.exists():
         raise RuntimeError("No iOS installer backup was found in this app folder.")
-    state = json.loads(marker.read_text())
-    backup = inside(app, state["backup"])
-    package = app / "Lib/site-packages/adb_auto_player"
+    state = json.loads((pending if pending.exists() else marker).read_text())
+    if state.get("format") != 2:
+        # The embedded helper's isolated _pth excludes this script's directory.
+        spec = importlib.util.spec_from_file_location(
+            "legacy_ios_installer", Path(__file__).with_name("legacy_install.py")
+        )
+        legacy = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(legacy)
+        legacy.restore(app)
+        return
     for item in state["files"]:
-        target = inside(package, item["path"])
-        if not target.is_file() or digest(target) != item["current"]:
-            raise RuntimeError(
-                "The app changed since installation; restore stopped: " + item["path"]
-            )
-        if (
-            item["existed"]
-            and digest(inside(backup / "files", item["path"])) != item["backup_hash"]
-        ):
-            raise RuntimeError("Backup validation failed.")
-    if state["runtime_existed"] and not (backup / "runtime").is_dir():
-        raise RuntimeError("Runtime backup is missing.")
-    # Keep the removed runtime recoverable rather than deleting it.
-    (app / "ios-runtime").rename(backup / "removed-ios-runtime")
-    if state["runtime_existed"]:
-        (backup / "runtime").rename(app / "ios-runtime")
-    for item in state["files"]:
-        target = inside(package, item["path"])
-        if item["existed"]:
-            shutil.copy2(inside(backup / "files", item["path"]), target)
-        else:
-            target.unlink()
-    marker.unlink()
+        target = inside(app, item["path"])
+        allowed = {item["current"]}
+        if pending.exists():
+            allowed.add(item.get("backup_hash"))
+        if target.exists():
+            if digest(target) not in allowed:
+                raise RuntimeError(
+                    "The app changed since installation; restore stopped: "
+                    + item["path"]
+                )
+        elif not pending.exists() or item["existed"]:
+            raise RuntimeError("A required app file is missing: " + item["path"])
+    # Keep a journal so a interrupted restore can be retried.
+    pending.write_text(json.dumps(state, indent=2))
+    restore_files(app, state)
+    marker.unlink(missing_ok=True)
+    pending.unlink(missing_ok=True)
     print("Previous app files restored. Game settings were preserved.")
 
 
@@ -199,4 +229,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

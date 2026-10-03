@@ -16,6 +16,8 @@ defaults:
 
 jobs:
   publish-tauri:
+    # iOS add-on previews carry their own installer; do not attach stock desktop builds.
+    if: github.event_name != 'release' || !contains(github.event.release.tag_name, '-ios.')
     permissions:
       contents: write # required for creating github releases
     strategy:

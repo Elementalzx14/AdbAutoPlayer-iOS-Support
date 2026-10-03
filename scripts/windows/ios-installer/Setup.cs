@@ -15,12 +15,12 @@ class Setup : Form {
     const string Release = "https://github.com/AdbAutoPlayer/AdbAutoPlayer/releases/tag/12.13.0";
 
     Setup() {
-        Text = "AdbAutoPlayer iOS Support - 12.13.0 Setup";
+        Text = "AdbAutoPlayer iOS Support - 12.13.0 Setup v2";
         ClientSize = new Size(680, 430); StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false;
         Font = new Font("Segoe UI", 10);
         var title = new Label { Text = "Add iOS support to AdbAutoPlayer 12.13.0", Left = 20, Top = 18, Width = 640, Height = 30, Font = new Font("Segoe UI", 15, FontStyle.Bold) };
-        var info = new Label { Text = "Install the official Windows x64 12.13.0 app first, then close it.\r\nThis add-on includes its own Python runtime and preserves game settings.\r\nApple Devices is required for USB. iPad layouts are not yet validated.", Left = 20, Top = 58, Width = 640, Height = 85 };
+        var info = new Label { Text = "Install the official Windows x64 12.13.0 app first, then close it.\r\nUses the app's Python 3.13 and preserves your game settings.\r\nApple Devices is required for USB. iPad layouts are not yet validated.", Left = 20, Top = 58, Width = 640, Height = 85 };
         var link = new LinkLabel { Text = "Download official AdbAutoPlayer 12.13.0", Left = 20, Top = 146, Width = 430, Height = 25 };
         link.LinkClicked += delegate { Process.Start(Release); };
         folder.SetBounds(20, 183, 535, 28);
@@ -32,14 +32,14 @@ class Setup : Form {
         install.Click += async delegate { await Execute("install"); };
         restore.Click += async delegate { await Execute("restore"); };
         status.SetBounds(20, 279, 640, 130); status.Multiline = true; status.ReadOnly = true; status.ScrollBars = ScrollBars.Vertical;
-        status.Text = "Ready. Connect one unlocked, trusted iPhone after installation.\r\nTested with iPhone 17 Pro Max, iOS 27, English portrait AFK Journey.";
+        status.Text = "Updating the older iOS preview? Choose Restore previous files first.\r\nTested with iPhone 17 Pro Max, iOS 27, English portrait AFK Journey.";
         Controls.AddRange(new Control[] { title, info, link, folder, browse, install, restore, status });
         FormClosing += delegate(object sender, FormClosingEventArgs e) { if (busy) e.Cancel = true; };
     }
 
     async Task Execute(string action) {
         busy = true; install.Enabled = restore.Enabled = browse.Enabled = folder.Enabled = false;
-        status.Text = "Checking files and preparing the bundled runtime. Please wait...";
+        status.Text = "Checking files and preparing the iOS update. Please wait...";
         string app = folder.Text;
         try {
             var result = await Task.Run(() => Run(app, action));
@@ -63,7 +63,7 @@ class Setup : Form {
                     entry.ExtractToFile(target);
                 }
             }
-            var start = new ProcessStartInfo(Path.Combine(temp, "runtime", "Scripts", "python.exe"));
+            var start = new ProcessStartInfo(Path.Combine(temp, "bootstrap", "Scripts", "python.exe"));
             start.Arguments = "-B \"" + Path.Combine(temp, "install.py") + "\" --app \"" + Path.GetFullPath(app).TrimEnd('\\') + "\" --action " + action;
             start.UseShellExecute = false; start.CreateNoWindow = true;
             start.RedirectStandardOutput = start.RedirectStandardError = true;

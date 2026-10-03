@@ -6,10 +6,11 @@ The original desktop interface, game settings, and task engine are preserved.
 **Enable iOS** selects the iPhone controller and visual profile; attempts,
 formations, and other game options still come from the existing Game Settings.
 
-**[Download the Windows iOS installer for 12.13.0 (Preview)](https://github.com/Elementalzx14/AdbAutoPlayer-iOS-Support/releases/tag/v12.13.0-ios.1).**
+**[Download the Windows iOS installer v2 for 12.13.0 (Preview)](https://github.com/Elementalzx14/AdbAutoPlayer-iOS-Support/releases/tag/v12.13.0-ios.2).**
 Install official AdbAutoPlayer 12.13.0 first, close it, then run this add-on.
-Python and iOS connection dependencies are bundled. The installer preserves game
-settings and provides backups and restoration.
+iOS dependencies are bundled and use the app's existing Python 3.13. The installer
+preserves game settings and provides backups and restoration. Updating the first
+iOS preview? Choose **Restore previous files** in the v2 installer before installing.
 
 See the [iOS setup and validation guide](docs/src/user-guide/ios-setup.md) and
 [Windows installer instructions](scripts/windows/ios-installer/README.md).
@@ -55,4 +56,4 @@ Interested in contributing or building from source?
 
 ### iOS maintainer review
 
-The source branch includes the [Python 3.13 integration and device/layout review](docs/src/user-guide/ios-review.md). The existing iOS preview installer predates these changes; see the review for live test evidence and remaining release checks.
+The v2 installer includes the [Python 3.13 integration and device/layout review](docs/src/user-guide/ios-review.md). See the review for live test evidence and remaining upstream release checks.

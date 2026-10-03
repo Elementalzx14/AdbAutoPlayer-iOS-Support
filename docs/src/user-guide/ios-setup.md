@@ -2,7 +2,8 @@
 
 **Source update (2026-10-03):** See [maintainer review and test results](ios-review.md)
 for the Python 3.13 integration, uniform layout, diagnostics and current limitations.
-The downloadable `v12.13.0-ios.1` add-on is the older USB preview.
+The downloadable `v12.13.0-ios.2` add-on includes these changes and uses the app's
+existing Python runtime. The older `v12.13.0-ios.1` release is retained for reference.
 
 
 The full original menu and Game
@@ -43,8 +44,9 @@ have image regression coverage, not exhaustive live coverage for every hero/skin
 Changing game layouts may require additional recognition images.
 
 The fork now includes upstream 12.13.0. The add-on installer preserves that
-release's UI executable and original Python dependencies, and bundles a separate
-iOS runtime. The source branch has removed the older navigation-image fallback.
+release's UI executable and existing Python dependency versions. The v2 installer
+adds iOS dependencies to the existing Python 3.13 runtime. The older navigation-image
+fallback has been removed.
 
 ## Build and setup
 
@@ -53,19 +55,18 @@ The Windows add-on installer targets the official **12.13.0 x64** installation.
 See [installer instructions](../../../scripts/windows/ios-installer/README.md).
 Official upstream installers alone do not contain the iOS changes.
 
-On Windows, install Python 3.11 and Apple's USB device support (Apple Devices),
-then connect exactly one iPhone, unlock it, and accept Trust This Computer.
-Run from this repository in PowerShell, substituting your actual paths:
+On Windows, install Apple's USB device support (Apple Devices), official AdbAutoPlayer
+12.13.0, and the v2 add-on. No separate Python installation or terminal is required.
+Connect exactly one iPhone, unlock it, and accept Trust This Computer. Enable
+Developer Mode if requested during connection setup.
 
-```powershell
-.\scripts\windows\setup-ios.ps1 -AppDirectory "C:\path\to\app" -Python311 "C:\path\to\Python311\python.exe"
-```
-
-In **ADB Settings > iPhone / iOS**, enable **Enable iOS**. If running from source
-or using a custom runtime location, set **iOS Python Path** to the absolute path
-of `ios-runtime\Scripts\python.exe`. Keep the phone unlocked and AFK Journey
+In **ADB Settings > iPhone / iOS**, enable **Enable iOS** and leave **iOS Python Path**
+blank. Clear an older custom path to use the app's runtime. Keep the phone unlocked and AFK Journey
 in English portrait mode. Choose tasks and their settings through the normal UI.
 No Mac was used for the tested USB connection.
+
+For source builds, use the Python 3.13 instructions in the [maintainer review](ios-review.md).
+`setup-ios.ps1` is retained only for the older standalone Python 3.11 setup.
 
 An official upstream app update can replace these changes. Keep a backup of your
 installation and use builds from this fork when retaining iOS support. Disabling

@@ -8,6 +8,7 @@ on:
       - 'src-tauri/src-python/adb_auto_player/device/**'
       - 'src-tauri/src-python/adb_auto_player/games/afk_journey/**'
       - 'scripts/windows/ios-runtime-overrides.txt'
+      - 'scripts/windows/ios-installer/**'
       - 'src-tauri/pyproject.toml'
 permissions:
   contents: read
@@ -34,3 +35,7 @@ jobs:
         run: |
           $env:PYTHONPATH = (Resolve-Path src-tauri/src-python).Path
           .venv-ios/Scripts/python.exe -m pytest src-tauri/src-python/tests/test_ios_review.py src-tauri/src-python/tests/test_ios_integration.py src-tauri/src-python/tests/games/afk_journey/test_ios_layout.py -q
+      - name: Installer recovery and settings preservation
+        shell: pwsh
+        run: |
+          .venv-ios/Scripts/python.exe -m pytest scripts/windows/ios-installer/test_install.py -q

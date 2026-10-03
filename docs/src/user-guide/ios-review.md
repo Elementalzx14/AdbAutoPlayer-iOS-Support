@@ -1,8 +1,8 @@
 # iOS maintainer review — 2026-10-03
 
 This branch builds on upstream 12.13.0 and retains the original game menu and settings.
-The existing downloadable `v12.13.0-ios.1` installer predates this review. It has not
-been replaced by these source changes.
+The `v12.13.0-ios.2` add-on installer includes this review and uses the app's existing
+Python 3.13. The older `v12.13.0-ios.1` installer remains available for reference.
 
 ## Runtime integration
 
@@ -101,6 +101,14 @@ towers, other modes, hero skins, fresh computer setup and iPads remain unverifie
 
 ## Automated validation
 
+- The v2 EXE was tested on a disposable copy extracted from the official Windows
+  12.13.0 installer: install, shared Python 3.13 imports without lzfse, restoration,
+  and restoration of the older v1 preview. All 10,827 payload files were verified;
+  all 39 original dependency versions were preserved. Restoration matched 5,941
+  original files byte-for-byte (excluding regenerable Python caches), preserved
+  the test settings, and removed every newly added payload file.
+- 11 installer regression tests passed, including failed-write recovery, corrupt
+  backups, later app changes, and legacy restoration with an isolated module path.
 - 105 focused device/layout/navigation/battle/Union Campaign and installer tests passed.
 - 159 AFK mixin tests passed in the broader suite (some overlap with the focused suite).
 - 63 iOS-specific tests passed in the actual isolated Python 3.13 environment, including
