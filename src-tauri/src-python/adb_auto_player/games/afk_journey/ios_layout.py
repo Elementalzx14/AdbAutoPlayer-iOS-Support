@@ -5,6 +5,8 @@ Coordinates use the same logical canvas and inverse touch mapping as IOSControll
 """
 
 import json
+import logging
+from datetime import datetime, timezone
 from dataclasses import replace
 from functools import cached_property, lru_cache
 from pathlib import Path
@@ -14,7 +16,6 @@ import numpy as np
 
 from adb_auto_player.exceptions import GameActionFailedError
 from adb_auto_player.file_loader import SettingsLoader
-from adb_auto_player.image_manipulation import IO
 from adb_auto_player.models import ConfidenceValue
 from adb_auto_player.models.geometry import Box, Point
 from adb_auto_player.models.image_manipulation import CropRegions
@@ -29,6 +30,12 @@ class IOSLayoutMixin:
         return SettingsLoader.adb_settings().ios.enabled
 
     @cached_property
+    def layout(self):
+        from .layout import AppleLayout, AndroidLayout
+
+        return AppleLayout() if self.using_ios else AndroidLayout()
+
+    @cached_property
     def _ios_visuals(self):
         folder = Path(__file__).with_name("ios_templates")
         manifest = json.loads((folder / "manifest.json").read_text())
@@ -37,23 +44,67 @@ class IOSLayoutMixin:
             for name, spec in manifest.items()
         }
 
-    def _ios_match(self, name, frame, threshold=None):
+    def _ios_viewport(self, frame):
+        """Use actual image bounds, excluding the transport's letterbox bars."""
+        metadata = getattr(self.device, "metadata", {})
+        return metadata.get("viewport", (0, 0, frame.shape[1], frame.shape[0]))
+
+    def _ios_match(self, name, frame, threshold=None, diagnostics=None):
         spec, template = self._ios_visuals[name]
         if template is None:
             raise GameActionFailedError("Missing iOS image: " + name)
-        x1, y1, x2, y2 = spec["box"]
-        margin = spec["margin"]
-        left, top = max(0, x1 - margin), max(0, y1 - margin)
+        vx, vy, vw, vh = self._ios_viewport(frame)
+        x1, y1, x2, y2 = [
+            round(v * (vw if i % 2 == 0 else vh) + (vx if i % 2 == 0 else vy))
+            for i, v in enumerate(spec["region"])
+        ]
+        template = cv2.resize(
+            template,
+            (
+                max(1, round(template.shape[1] * vw / 1080)),
+                max(1, round(template.shape[0] * vh / 1920)),
+            ),
+            interpolation=cv2.INTER_AREA,
+        )
+        if "search_region" in spec:
+            x1, y1, x2, y2 = [
+                round(v * (vw if i % 2 == 0 else vh) + (vx if i % 2 == 0 else vy))
+                for i, v in enumerate(spec["search_region"])
+            ]
+        margin = round(spec["margin_fraction"] * vw)
+        vertical_margin = round(spec["margin_fraction"] * 1080 * vh / 1920)
+        left, top = max(0, x1 - margin), max(0, y1 - vertical_margin)
         roi = frame[
-            top : min(frame.shape[0], y2 + margin),
+            top : min(frame.shape[0], y2 + vertical_margin),
             left : min(frame.shape[1], x2 + margin),
         ]
         h, w = template.shape[:2]
         if roi.shape[0] < h or roi.shape[1] < w:
+            if diagnostics is not None:
+                diagnostics[name] = {
+                    "matched": False,
+                    "reason": "template exceeds region",
+                }
             return None
         _, score, _, point = cv2.minMaxLoc(
             cv2.matchTemplate(roi, template, cv2.TM_CCOEFF_NORMED)
         )
+        if diagnostics is not None:
+            px, py = point
+            difference = float(
+                np.abs(roi[py : py + h, px : px + w].astype(float) - template).mean()
+            )
+            diagnostics[name] = {
+                "score": float(score) if np.isfinite(score) else None,
+                "threshold": max(spec["threshold"], float(threshold or 0)),
+                "mean_color_difference": difference,
+                "matched": bool(
+                    np.isfinite(score)
+                    and score >= max(spec["threshold"], float(threshold or 0))
+                    and difference <= 28
+                ),
+                "position": [left + px, top + py],
+            }
         # A caller's looser Android threshold must not weaken the iOS profile.
         if not np.isfinite(score) or score < max(
             spec["threshold"], float(threshold or 0)
@@ -67,36 +118,29 @@ class IOSLayoutMixin:
         )
 
     @lru_cache(maxsize=128)
-    def _load_image(self, template, grayscale=False):
-        # This upstream navigation guard was added after the installed 12.12.2
-        # release. Ship its unchanged asset with the compatibility module.
-        if (
-            str(template) == "battle_modes/coming_soon.png"
-            and not (self.template_dir / template).exists()
-        ):
-            return IO.load_image(
-                Path(__file__).with_name("ios_templates") / "coming_soon_source.png",
-                grayscale=grayscale,
-            )
-        return super()._load_image(template, grayscale)
-
-    @lru_cache(maxsize=128)
-    def _ios_hero_variants(self, name):
+    def _ios_hero_variants(self, name, vw):
         image = self._load_image(name)
-        # Portrait icons scale with phone width. The logical canvas has a
-        # different aspect ratio, so apply the same vertical mapping to assets.
+        # The uniform canvas preserves the original hero icon aspect ratio.
         return [
-            cv2.resize(image, None, fx=float(scale), fy=float(scale * 0.818))
+            cv2.resize(
+                image,
+                None,
+                fx=float(scale * vw / 1080),
+                fy=float(scale * vw / 1080),
+            )
             for scale in np.arange(1.3, 1.61, 0.025)
         ]
 
     def _ios_find_hero(self, name, frame, threshold):
         # The original Android crop targets the formation board. On this iPhone
         # the unobstructed hero portraits are in the row underneath the board.
-        left, top = 200, 1200
-        roi = frame[top:1400, left:1020]
+        vx, vy, vw, vh = self._ios_viewport(frame)
+        left, top = round(vx + vw * (200 / 1080)), round(vy + vh * (1200 / 1920))
+        roi = frame[
+            top : round(vy + vh * (1400 / 1920)), left : round(vx + vw * (1020 / 1080))
+        ]
         best = None
-        for template in self._ios_hero_variants(name):
+        for template in self._ios_hero_variants(name, vw):
             h, w = template.shape[:2]
             if roi.shape[0] < h or roi.shape[1] < w:
                 continue
@@ -175,6 +219,37 @@ class IOSLayoutMixin:
             if result is not None:
                 return result
         return None
+
+    def capture_debug_screenshot(self, category="manual"):
+        """Save native and normalized pixels plus scores without uploading them."""
+        try:
+            if not self.using_ios:
+                return super().capture_debug_screenshot(category)
+            stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+            destination = (
+                SettingsLoader.get_app_config_dir().parent / "ios-debug" / stamp
+            )
+            metadata = self.device.capture_debug(destination)
+            frame = cv2.imread(str(destination / "normalized.bmp"))
+            scores = {}
+            for name in self._ios_visuals:
+                self._ios_match(name, frame, diagnostics=scores)
+            metadata.update(
+                {
+                    "category": category,
+                    "templates": scores,
+                    "note": "Raw visual scores; victory guards still apply during play.",
+                }
+            )
+            (destination / "report.json").write_text(
+                json.dumps(metadata, indent=2), encoding="utf-8"
+            )
+            logging.info(
+                "iOS debug capture saved to %s. Review screenshots for account details before sharing.",
+                destination,
+            )
+        except Exception as exc:
+            logging.warning("Could not capture iOS diagnostics: %s", exc)
 
     def press_back_button(self):
         if not self.using_ios:

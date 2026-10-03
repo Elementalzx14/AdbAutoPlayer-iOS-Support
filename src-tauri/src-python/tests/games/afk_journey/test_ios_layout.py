@@ -162,7 +162,10 @@ def test_season_victory_advances_using_original_battle_handler(game):
 def test_season_next_requires_both_victory_markers(game, missing):
     frame = cv2.imread(str(DATA / "season-victory.png"))
     game.battle_state.mode = Mode.SEASON_AFK_STAGES
-    x1, y1, x2, y2 = game._ios_visuals[missing][0]["box"]
+    x1, y1, x2, y2 = [
+        round(v * (1080 if i % 2 == 0 else 1920))
+        for i, v in enumerate(game._ios_visuals[missing][0]["region"])
+    ]
     frame[y1:y2, x1:x2] = 0
     assert game.game_find_template_match("next.png", screenshot=frame) is None
 
@@ -216,7 +219,13 @@ def test_hero_exclusion_uses_iphone_portrait_row(game):
     game.template_dir = (
         Path(__file__).parents[3] / "adb_auto_player/games/afk_journey/templates"
     )
-    frame = cv2.imread(str(DATA / "legend-records.png"))
+    from adb_auto_player.device.ios.geometry import Canvas
+
+    canvas = Canvas(1320, 2868, 1080, 1920)
+    game.device.metadata = {"viewport": canvas.viewport}
+    frame = canvas.render(
+        cv2.resize(cv2.imread(str(DATA / "legend-records.png")), (1320, 2868))
+    )
     assert game.game_find_template_match(
         "heroes/evie.png", threshold=ConfidenceValue("85%"), screenshot=frame
     )
@@ -226,3 +235,18 @@ def test_hero_exclusion_uses_iphone_portrait_row(game):
         )
         is None
     )
+
+
+@pytest.mark.parametrize("screen,template", CASES.items())
+def test_uniform_canvas_recognizes_existing_controls(game, screen, template):
+    from adb_auto_player.device.ios.geometry import Canvas
+
+    frame = cv2.imread(str(DATA / (screen + ".png")))
+    canvas = Canvas(1320, 2868, 1080, 1920)
+    # Fixtures were archived on the old stretched canvas. Reconstruct its
+    # native aspect ratio to exercise the new letterbox transform.
+    native = cv2.resize(frame, (1320, 2868))
+    game.device.metadata = {"viewport": canvas.viewport}
+    result = game.game_find_template_match(template, screenshot=canvas.render(native))
+    assert result is not None
+    canvas.native_point(result.x, result.y)

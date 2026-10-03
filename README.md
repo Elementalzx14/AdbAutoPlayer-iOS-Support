@@ -52,3 +52,7 @@ Interested in contributing or building from source?
 ### AFK Journey
 [Discord: Yaphalla](https://discord.gg/yaphalla)  
 [Channel: adb-auto-player](https://discord.com/channels/1332082220013322240/1338732933057347655)
+
+### iOS maintainer review
+
+The source branch includes the [Python 3.13 integration and device/layout review](docs/src/user-guide/ios-review.md). The existing iOS preview installer predates these changes; see the review for live test evidence and remaining release checks.

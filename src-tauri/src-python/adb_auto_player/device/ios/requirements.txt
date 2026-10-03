@@ -1,4 +1,4 @@
-# Separate Python 3.11 runtime; the desktop app uses Python 3.13.
+# CoreDevice backend dependencies. Python 3.13 uses the documented Windows override.
 pymobiledevice3==11.19.4
 opencv-python==5.0.0.93
 numpy==2.4.6

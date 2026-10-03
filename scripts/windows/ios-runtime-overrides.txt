@@ -1,0 +1,4 @@
+# The Windows CoreDevice screenshot/HID path does not import pyimg4/lzfse.
+# Firmware and DDI manipulation are outside this backend's supported scope.
+# Python 3.13: lzfse 0.4.2 has no Windows wheel. See ios-review.md for live evidence.
+lzfse; sys_platform == "never"

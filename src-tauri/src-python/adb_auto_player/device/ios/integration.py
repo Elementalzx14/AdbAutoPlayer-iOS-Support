@@ -1,5 +1,6 @@
-"""Bridge the desktop controls to an isolated Python 3.11 iPhone worker."""
+"""Bridge desktop controls to the current interpreter or a legacy runtime."""
 
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -28,11 +29,13 @@ def worker_command():
             "This experimental iOS integration currently requires Windows."
         )
     configured = SettingsLoader.adb_settings().ios.python_path
-    runtime = (
-        Path(configured)
-        if configured
-        else SettingsLoader.get_resource_dir() / "ios-runtime/Scripts/python.exe"
-    )
+    if configured:
+        runtime = Path(configured)
+    elif importlib.util.find_spec("pymobiledevice3") is not None:
+        runtime = Path(sys.executable)
+    else:
+        # Compatibility with previously shipped add-on installations.
+        runtime = SettingsLoader.get_resource_dir() / "ios-runtime/Scripts/python.exe"
     if not runtime.is_file():
         raise RuntimeError(
             "iOS runtime is missing. Run "

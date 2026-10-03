@@ -1,5 +1,10 @@
 # Integrated iPhone support for AdbAutoPlayer
 
+**Source update (2026-10-03):** See [maintainer review and test results](ios-review.md)
+for the Python 3.13 integration, uniform layout, diagnostics and current limitations.
+The downloadable `v12.13.0-ios.1` add-on is the older USB preview.
+
+
 The full original menu and Game
 Settings remain available. Enable iOS selects the USB controller and iPhone visual
 profile; the original game engine reads AFKJourney.toml for attempts, formations,
@@ -39,7 +44,7 @@ Changing game layouts may require additional recognition images.
 
 The fork now includes upstream 12.13.0. The add-on installer preserves that
 release's UI executable and original Python dependencies, and bundles a separate
-iOS runtime. The older navigation-image fallback remains for development use.
+iOS runtime. The source branch has removed the older navigation-image fallback.
 
 ## Build and setup
 

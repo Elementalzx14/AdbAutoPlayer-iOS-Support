@@ -23,6 +23,9 @@ dependencies = [
     "onnxruntime>=1.28.0"
 ]
 
+[project.optional-dependencies]
+ios = ["pymobiledevice3==11.19.4; sys_platform == 'win32'"]
+
 [project.scripts]
 adb-auto-player = "adb_auto_player.main_cli:main"
 

@@ -1,5 +1,7 @@
 """Select the profile's device backend before creating any game controller."""
 
+import logging
+
 from adb_auto_player.file_loader import SettingsLoader
 
 
@@ -11,6 +13,14 @@ def execute_for_device(command, commands, stop=None):
         return Execute.find_command_and_execute(command, commands)
     from .ios.controller import IOSController  # noqa: PLC0415
 
+    verified = {"AFKStages", "SeasonAFKStages", "CaptureDeviceDebug"}
+    if command not in verified:
+        logging.warning(
+            "iOS task %s is not fully verified. AFK and Season AFK have live battle tests; "
+            "Legend Trial has limited Lightbearer testing; Dura has navigation/limit checks only. "
+            "Other tasks and custom routines are experimental. Original settings remain active.",
+            command,
+        )
     IOSController.stop_requested = staticmethod(stop or (lambda: False))
     try:
         return Execute.find_command_and_execute(command, commands)

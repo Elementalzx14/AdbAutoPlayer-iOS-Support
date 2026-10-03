@@ -1,0 +1,36 @@
+name: iOS Python 3.13 compatibility
+on:
+  workflow_dispatch:
+  push:
+    branches: [ios-support]
+  pull_request:
+    paths:
+      - 'src-tauri/src-python/adb_auto_player/device/**'
+      - 'src-tauri/src-python/adb_auto_player/games/afk_journey/**'
+      - 'scripts/windows/ios-runtime-overrides.txt'
+      - 'src-tauri/pyproject.toml'
+permissions:
+  contents: read
+jobs:
+  windows-ios:
+    runs-on: windows-latest
+    env:
+      PYTAURI_STANDALONE: '1'
+      PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+      - name: Install the main package with iOS support on Python 3.13
+        shell: pwsh
+        run: |
+          uv venv --python 3.13 .venv-ios
+          uv pip install --python .venv-ios/Scripts/python.exe --override scripts/windows/ios-runtime-overrides.txt './src-tauri[ios]' pytest
+      - name: Import the packaged transport without lzfse
+        shell: pwsh
+        run: |
+          .venv-ios/Scripts/python.exe -c "import importlib.util; from adb_auto_player.device.ios.phone import Phone; from adb_auto_player.device.ios.geometry import Canvas; assert importlib.util.find_spec('lzfse') is None"
+      - name: Device and layout regression tests (no phone required)
+        shell: pwsh
+        run: |
+          $env:PYTHONPATH = (Resolve-Path src-tauri/src-python).Path
+          .venv-ios/Scripts/python.exe -m pytest src-tauri/src-python/tests/test_ios_review.py src-tauri/src-python/tests/test_ios_integration.py src-tauri/src-python/tests/games/afk_journey/test_ios_layout.py -q

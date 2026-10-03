@@ -1,19 +1,18 @@
-"""Persistent Apple USB RPC worker; contains no game task or battle settings."""
+"""Persistent Apple device worker with file-based screenshot transport."""
 
 import argparse
 import asyncio
-import base64
 import importlib.util
 import json
 from pathlib import Path
 import sys
+import time
 
 import cv2
 import numpy as np
 
 
-async def serve(args):
-    """Serve device primitives until the desktop closes its command pipe."""
+def load_transport():
     folder = Path(__file__).resolve().parent
     spec = importlib.util.spec_from_file_location(
         "ios_transport",
@@ -23,7 +22,37 @@ async def serve(args):
     package = importlib.util.module_from_spec(spec)
     sys.modules["ios_transport"] = package
     spec.loader.exec_module(package)
-    from ios_transport.phone import Phone
+
+
+def device_error(exc):
+    """Keep actionable connection failures distinct from template failures."""
+    detail = f"{type(exc).__name__}: {exc}"
+    lower = detail.lower()
+    if "connect exactly one" in lower:
+        return "iPhone disconnected or multiple devices connected. Connect exactly one iPhone by USB, unlock it, then restart the task."
+    if isinstance(exc, ValueError):
+        return "iOS operation rejected: " + str(exc)
+    if (
+        any(word in lower for word in ("locked", "password", "passcode"))
+        and "unlocked" not in lower
+    ):
+        return "Unlock your iPhone and leave AFK Journey visible. " + detail
+    if any(word in lower for word in ("pair", "trust", "invalidhost")):
+        return (
+            "Reconnect by USB, unlock the iPhone, and accept Trust This Computer. "
+            + detail
+        )
+    return (
+        "iOS connection failed. Check USB, unlock the device, and ensure Developer Mode is enabled. "
+        + detail
+    )
+
+
+async def serve(args):
+    load_transport()
+    from ios_transport.phone import Phone, DeviceLockedError, normalized_point
+    from ios_transport.geometry import Canvas
+    from ios_transport.bundles import resolve_bundle
     from ios_transport.usb_lock import exclusive_run
     from pymobiledevice3.remote.core_device.app_service import AppServiceService
     from pymobiledevice3.remote.core_device.hid_service import (
@@ -32,29 +61,59 @@ async def serve(args):
         TOUCHSCREEN_STATE_RELEASE,
     )
 
-    # Logical identifiers keep the existing game's package checks unchanged.
-    android_package = "com.farlightgames.igame.gp"
+    args.session.mkdir(parents=True, exist_ok=True)
     process_id = None
-
+    bundle = None
+    canvas = None
+    native_data = None
+    metadata = {}
     with exclusive_run(args.workdir):
         async with Phone(args.workdir) as phone:
 
             async def screenshot():
-                data = await phone.screenshot()
-                native = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+                nonlocal canvas, native_data, metadata
+                started = time.perf_counter()
+                try:
+                    native_data = await phone.screenshot()
+                except DeviceLockedError:
+                    raise
+                except Exception:
+                    # A screenshot has no game side effects. Retry once after reopening
+                    # the same paired device. Never retry a tap or launch automatically.
+                    await phone.reconnect()
+                    native_data = await phone.screenshot()
+                native = cv2.imdecode(
+                    np.frombuffer(native_data, np.uint8), cv2.IMREAD_COLOR
+                )
                 if native is None:
                     raise RuntimeError("Invalid iOS screenshot.")
-                height, width = native.shape[:2]
-                if (height > width) != (args.height > args.width):
+                h, w = native.shape[:2]
+                if (h > w) != (args.height > args.width):
                     raise RuntimeError(
-                        "Rotate the Apple device to the game's expected orientation."
+                        "Rotate the Apple device to portrait for this game."
                     )
-                # Present a logical canvas; touches use the exact inverse mapping.
-                return cv2.resize(
-                    native, (args.width, args.height), interpolation=cv2.INTER_AREA
-                )
+                canvas = Canvas(w, h, args.width, args.height)
+                frame = canvas.render(native)
+                metadata = {
+                    **phone.metadata,
+                    "native_size": [w, h],
+                    "canvas_size": [args.width, args.height],
+                    "viewport": canvas.viewport,
+                    "capture_seconds": round(time.perf_counter() - started, 4),
+                }
+                # Atomic replacement prevents a partial frame from being consumed.
+                pending = args.session / "frame.pending.bmp"
+                cv2.imwrite(str(pending), frame)
+                pending.replace(args.session / "frame.bmp")
+                return metadata
+
+            async def point(x, y):
+                if canvas is None:
+                    await screenshot()
+                return canvas.native_point(x, y)
 
             async def drag(request):
+                await phone.ensure_unlocked()
                 if phone.hid is None:
                     phone.hid = await phone.stack.enter_async_context(
                         touch_session(phone.rsd)
@@ -65,51 +124,54 @@ async def serve(args):
                     raise ValueError(
                         "Hold/swipe duration must be between 0 and 30 seconds."
                     )
-                steps = max(1, round(duration * 30))
-                from ios_transport.phone import normalized_point
-
                 start = normalized_point(
-                    request["x"], request["y"], args.width, args.height
+                    *(await point(request["x"], request["y"])),
+                    canvas.native_width,
+                    canvas.native_height,
                 )
                 end = normalized_point(
-                    request["end_x"], request["end_y"], args.width, args.height
+                    *(await point(request["end_x"], request["end_y"])),
+                    canvas.native_width,
+                    canvas.native_height,
                 )
+                steps = max(1, round(duration * 30))
                 x, y = start
                 try:
                     for step in range(steps + 1):
                         x = round(start[0] + (end[0] - start[0]) * step / steps)
                         y = round(start[1] + (end[1] - start[1]) * step / steps)
-                        await phone.hid.send_touchscreen(
-                            TOUCHSCREEN_STATE_CONTACT, x, y
+                        await asyncio.wait_for(
+                            phone.hid.send_touchscreen(TOUCHSCREEN_STATE_CONTACT, x, y),
+                            10,
                         )
                         if step < steps:
                             await asyncio.sleep(duration / steps)
                 finally:
-                    await phone.hid.send_touchscreen(TOUCHSCREEN_STATE_RELEASE, x, y)
+                    await asyncio.wait_for(
+                        phone.hid.send_touchscreen(TOUCHSCREEN_STATE_RELEASE, x, y), 10
+                    )
 
             while line := await asyncio.to_thread(sys.stdin.readline):
                 try:
                     request = json.loads(line)
                     action = request["action"]
                     value = None
-                    if action in ("screenshot", "check_orientation"):
-                        frame = await screenshot()
-                        if action == "screenshot":
-                            value = base64.b64encode(
-                                cv2.imencode(".png", frame)[1]
-                            ).decode()
+                    if action in ("screenshot", "check_orientation", "debug_capture"):
+                        value = await screenshot()
+                        if action == "debug_capture":
+                            (args.session / "native.png").write_bytes(native_data)
                     elif action == "tap":
-                        await phone.tap(
-                            request["x"], request["y"], args.width, args.height
-                        )
+                        x, y = await point(request["x"], request["y"])
+                        await phone.tap(x, y, canvas.native_width, canvas.native_height)
                     elif action == "swipe":
                         await drag(request)
-                    elif action == "select_game":
-                        if android_package not in request["packages"]:
-                            raise RuntimeError(
-                                "This game's Apple bundle identifier has not been mapped yet."
-                            )
-                        result = await phone.launch()
+                    elif action in ("select_game", "start"):
+                        bundle = resolve_bundle(
+                            request["packages"]
+                            if action == "select_game"
+                            else [request["package"]]
+                        )
+                        result = await phone.launch(bundle)
                         process_id = int(result["processToken"]["processIdentifier"])
                     elif action == "running_app":
                         if process_id is not None:
@@ -121,61 +183,36 @@ async def serve(args):
                                 int(p["processIdentifier"]) == process_id
                                 for p in processes
                             ):
-                                value = android_package
-                    elif action == "start":
-                        if request["package"] != android_package:
-                            raise RuntimeError("Unknown Apple game mapping.")
-                        result = await phone.launch()
-                        process_id = int(result["processToken"]["processIdentifier"])
+                                value = bundle
                     elif action == "stop":
-                        if request["package"] != android_package:
-                            raise RuntimeError("Unknown Apple game mapping.")
+                        if resolve_bundle([request["package"]]) != bundle:
+                            raise ValueError("The requested game is not selected.")
                         if process_id is not None:
                             async with AppServiceService(phone.rsd) as service:
                                 await asyncio.wait_for(
                                     service.send_signal_to_process(process_id, 15), 15
                                 )
                             process_id = None
-                    elif action == "back":
-                        frame = await screenshot()
-                        template = cv2.imread(request["template"])
-                        if template is None:
-                            raise RuntimeError(
-                                "No iOS back-button template is available."
-                            )
-                        _, confidence, _, position = cv2.minMaxLoc(
-                            cv2.matchTemplate(frame, template, cv2.TM_CCOEFF_NORMED)
-                        )
-                        if confidence < 0.92:
-                            raise RuntimeError(
-                                "iOS has no Android Back key, and no verified in-game Back button was found."
-                            )
-                        h, w = template.shape[:2]
-                        await phone.tap(
-                            position[0] + w / 2,
-                            position[1] + h / 2,
-                            args.width,
-                            args.height,
-                        )
                     else:
                         raise ValueError(
                             "Unsupported Apple device operation: " + action
                         )
                     print(json.dumps({"value": value}), flush=True)
                 except Exception as exc:
-                    print(json.dumps({"error": str(exc)}), flush=True)
+                    print(json.dumps({"error": device_error(exc)}), flush=True)
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--workdir", type=Path, required=True)
+    parser.add_argument("--session", type=Path, required=True)
     parser.add_argument("--width", type=int, required=True)
     parser.add_argument("--height", type=int, required=True)
     args = parser.parse_args()
     try:
         asyncio.run(serve(args))
     except Exception as exc:
-        print(json.dumps({"error": str(exc)}), flush=True)
+        print(json.dumps({"error": device_error(exc)}), flush=True)
         return 1
     return 0
 

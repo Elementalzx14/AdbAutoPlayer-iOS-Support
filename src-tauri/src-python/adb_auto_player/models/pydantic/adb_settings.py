@@ -41,19 +41,21 @@ class IOSSettings(BaseModel):
 
     enabled: bool = Field(
         False,
-        title="Enable iOS",
+        title="Enable iOS (Windows only)",
         description="Windows USB connection. Open AFK Journey in "
         "English on an unlocked, "
         "trusted iPhone with Developer Mode enabled. Tested on iPhone 17 Pro Max, "
         "iOS 27, portrait 1320 x 2868. Selects the Apple USB connection; "
         "configure game behavior in Game Settings. Other iPhone/iPad layouts "
-        "and game modes still require device support.",
+        "and game modes still require device support. AFK/Season AFK battles tested; "
+        "Legend Trial limited testing; Dura navigation only. Other tasks are unverified. "
+        "Use Capture Debug Screenshot to report problems.",
     )
     python_path: str = Field(
         "",
         title="iOS Python Path",
-        description="Leave blank to use the bundled iOS runtime. "
-        "Advanced: path to Python 3.11 with the iOS requirements installed.",
+        description="Leave blank to use the app runtime when iOS dependencies are installed; older add-ons use their bundled runtime. "
+        "Advanced: optional Python executable with the iOS requirements installed.",
     )
 
 

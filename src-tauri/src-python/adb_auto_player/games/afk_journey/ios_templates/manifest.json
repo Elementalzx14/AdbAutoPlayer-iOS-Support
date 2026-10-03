@@ -1,453 +1,465 @@
 {
   "navigation/resonating_hall_shortcut.png": {
     "file": "world_modes.png",
-    "box": [
-      384,
-      1811,
-      543,
-      1839
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.35555555555555557,
+      0.9432291666666667,
+      0.5027777777777778,
+      0.9578125
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "ios/world_modes.png": {
     "file": "world_modes.png",
-    "box": [
-      384,
-      1811,
-      543,
-      1839
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.35555555555555557,
+      0.9432291666666667,
+      0.5027777777777778,
+      0.9578125
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "battle_modes/afk_stage.png": {
     "file": "afk_card.png",
-    "box": [
-      50,
-      654,
-      339,
-      709
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.046296296296296294,
+      0.340625,
+      0.3138888888888889,
+      0.3692708333333333
+    ],
+    "margin_fraction": 0.06018518518518518,
+    "search_region": [
+      0.0,
+      0.15,
+      0.4,
+      0.88
+    ]
   },
   "ios/stage.png": {
     "file": "stage_title.png",
-    "box": [
-      92,
-      1012,
-      395,
-      1071
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.08518518518518518,
+      0.5270833333333333,
+      0.36574074074074076,
+      0.5578125
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "afk_stages/season_battle.png": {
     "file": "stage_battle.png",
-    "box": [
-      767,
-      1566,
-      929,
-      1616
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.7101851851851851,
+      0.815625,
+      0.8601851851851852,
+      0.8416666666666667
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "ios/stage_season.png": {
     "file": "stage_season.png",
-    "box": [
-      180,
-      1559,
-      487,
-      1628
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.16666666666666666,
+      0.8119791666666667,
+      0.45092592592592595,
+      0.8479166666666667
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "battle/records.png": {
     "file": "formation_records.png",
-    "box": [
-      242,
-      1762,
-      352,
-      1791
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.22407407407407406,
+      0.9177083333333333,
+      0.32592592592592595,
+      0.9328125
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "battle/battle.png": {
     "file": "formation_battle.png",
-    "box": [
-      817,
-      1718,
-      1004,
-      1769
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.7564814814814815,
+      0.8947916666666667,
+      0.9296296296296296,
+      0.9213541666666667
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "battle/copy.png": {
     "file": "copy.png",
-    "box": [
-      553,
-      1481,
-      712,
-      1535
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.5120370370370371,
+      0.7713541666666667,
+      0.6592592592592592,
+      0.7994791666666666
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "battle/formation_next.png": {
     "file": "formation_next.png",
-    "box": [
-      962,
-      1012,
-      1016,
-      1073
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.8907407407407407,
+      0.5270833333333333,
+      0.9407407407407408,
+      0.5588541666666667
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "retry.png": {
     "file": "retry.png",
-    "box": [
-      668,
-      1745,
-      827,
-      1798
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.6185185185185185,
+      0.9088541666666666,
+      0.7657407407407407,
+      0.9364583333333333
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "next.png": {
     "file": "victory_battle.png",
-    "box": [
-      669,
-      1730,
-      831,
-      1779
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.6194444444444445,
+      0.9010416666666666,
+      0.7694444444444445,
+      0.9265625
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "ios/back.png": {
     "file": "back.png",
-    "box": [
-      34,
-      1716,
-      159,
-      1777
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.03148148148148148,
+      0.89375,
+      0.14722222222222223,
+      0.9255208333333333
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "ios/records_close.png": {
     "file": "records_close.png",
-    "box": [
-      424,
-      1743,
-      644,
-      1790
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.3925925925925926,
+      0.9078125,
+      0.5962962962962963,
+      0.9322916666666666
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "ios/owned_checked.png": {
     "file": "owned_checked.png",
-    "box": [
-      44,
-      146,
-      107,
-      198
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.040740740740740744,
+      0.07604166666666666,
+      0.09907407407407408,
+      0.103125
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "ios/owned_unchecked.png": {
     "file": "owned_unchecked.png",
-    "box": [
-      44,
-      146,
-      107,
-      198
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.040740740740740744,
+      0.07604166666666666,
+      0.09907407407407408,
+      0.103125
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "ios/records.png": {
     "file": "records_title.png",
-    "box": [
-      356,
-      323,
-      606,
-      372
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.3296296296296296,
+      0.16822916666666668,
+      0.5611111111111111,
+      0.19375
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "ios/disconnect.png": {
     "file": "disconnect.png",
-    "box": [
-      153,
-      804,
-      951,
-      903
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.14166666666666666,
+      0.41875,
+      0.8805555555555555,
+      0.4703125
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "ios/victory_rewards.png": {
     "file": "victory_rewards.png",
-    "box": [
-      338,
-      1200,
-      740,
-      1233
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.31296296296296294,
+      0.625,
+      0.6851851851851852,
+      0.6421875
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "ios/victory_progress.png": {
     "file": "victory_progress.png",
-    "box": [
-      86,
-      1267,
-      409,
-      1301
-    ],
     "threshold": 0.91,
-    "margin": 65
+    "region": [
+      0.07962962962962963,
+      0.6598958333333333,
+      0.3787037037037037,
+      0.6776041666666667
+    ],
+    "margin_fraction": 0.06018518518518518
   },
   "navigation/resonating_hall_back.png": {
     "file": "hall_back.png",
-    "box": [
-      52,
-      1760,
-      136,
-      1815
-    ],
     "threshold": 0.91,
-    "margin": 45
+    "region": [
+      0.04814814814814815,
+      0.9166666666666666,
+      0.1259259259259259,
+      0.9453125
+    ],
+    "margin_fraction": 0.041666666666666664
   },
   "battle_modes/duras_trials.png": {
     "file": "duras_card.png",
-    "box": [
-      50,
-      1098,
-      335,
-      1148
-    ],
     "threshold": 0.91,
-    "margin": 70
+    "region": [
+      0.046296296296296294,
+      0.571875,
+      0.3101851851851852,
+      0.5979166666666667
+    ],
+    "margin_fraction": 0.06481481481481481,
+    "search_region": [
+      0.0,
+      0.15,
+      0.4,
+      0.88
+    ]
   },
   "battle_modes/legend_trial.png": {
     "file": "legend_card.png",
-    "box": [
-      50,
-      1535,
-      337,
-      1590
-    ],
     "threshold": 0.91,
-    "margin": 70
+    "region": [
+      0.046296296296296294,
+      0.7994791666666666,
+      0.31203703703703706,
+      0.828125
+    ],
+    "margin_fraction": 0.06481481481481481
   },
   "duras_trials/socketed_charms_overview.png": {
     "file": "dura_overview.png",
-    "box": [
-      920,
-      352,
-      1018,
-      432
-    ],
     "threshold": 0.91,
-    "margin": 70
+    "region": [
+      0.8518518518518519,
+      0.18333333333333332,
+      0.9425925925925925,
+      0.225
+    ],
+    "margin_fraction": 0.06481481481481481
   },
   "duras_trials/sweep.png": {
     "file": "dura_sweep.png",
-    "box": [
-      547,
-      1570,
-      720,
-      1625
-    ],
     "threshold": 0.91,
-    "margin": 70
+    "region": [
+      0.5064814814814815,
+      0.8177083333333334,
+      0.6666666666666666,
+      0.8463541666666666
+    ],
+    "margin_fraction": 0.06481481481481481
   },
   "legend_trials/s_header.png": {
     "file": "legend_header.png",
-    "box": [
-      211,
-      219,
-      640,
-      277
-    ],
     "threshold": 0.91,
-    "margin": 60
+    "region": [
+      0.19537037037037036,
+      0.1140625,
+      0.5925925925925926,
+      0.14427083333333332
+    ],
+    "margin_fraction": 0.05555555555555555
   },
   "legend_trials/banner_lightbearer.png": {
     "file": "legend_light.png",
-    "box": [
-      109,
-      594,
-      462,
-      647
-    ],
     "threshold": 0.91,
-    "margin": 60
+    "region": [
+      0.10092592592592593,
+      0.309375,
+      0.42777777777777776,
+      0.33697916666666666
+    ],
+    "margin_fraction": 0.05555555555555555
   },
   "legend_trials/banner_wilder.png": {
     "file": "legend_wilder.png",
-    "box": [
-      102,
-      825,
-      470,
-      876
-    ],
     "threshold": 0.91,
-    "margin": 60
+    "region": [
+      0.09444444444444444,
+      0.4296875,
+      0.4351851851851852,
+      0.45625
+    ],
+    "margin_fraction": 0.05555555555555555
   },
   "legend_trials/banner_graveborn.png": {
     "file": "legend_graveborn.png",
-    "box": [
-      143,
-      1056,
-      505,
-      1100
-    ],
     "threshold": 0.91,
-    "margin": 60
+    "region": [
+      0.13240740740740742,
+      0.55,
+      0.4675925925925926,
+      0.5729166666666666
+    ],
+    "margin_fraction": 0.05555555555555555
   },
   "legend_trials/banner_mauler.png": {
     "file": "legend_mauler.png",
-    "box": [
-      112,
-      1287,
-      460,
-      1338
-    ],
     "threshold": 0.91,
-    "margin": 60
+    "region": [
+      0.1037037037037037,
+      0.6703125,
+      0.42592592592592593,
+      0.696875
+    ],
+    "margin_fraction": 0.05555555555555555
   },
   "legend_trials/faction_icon_lightbearer.png": {
     "file": "legend_unavailable.png",
-    "box": [
-      175,
-      750,
-      382,
-      782
-    ],
     "threshold": 0.91,
-    "margin": 40
+    "region": [
+      0.16203703703703703,
+      0.390625,
+      0.3537037037037037,
+      0.40729166666666666
+    ],
+    "margin_fraction": 0.037037037037037035
   },
   "legend_trials/faction_icon_wilder.png": {
     "file": "legend_unavailable.png",
-    "box": [
-      175,
-      985,
-      382,
-      1017
-    ],
     "threshold": 0.91,
-    "margin": 40
+    "region": [
+      0.16203703703703703,
+      0.5130208333333334,
+      0.3537037037037037,
+      0.5296875
+    ],
+    "margin_fraction": 0.037037037037037035
   },
   "legend_trials/faction_icon_graveborn.png": {
     "file": "legend_unavailable_graveborn.png",
-    "box": [
-      219,
-      1201,
-      449,
-      1235
-    ],
     "threshold": 0.91,
-    "margin": 40
+    "region": [
+      0.20277777777777778,
+      0.6255208333333333,
+      0.41574074074074074,
+      0.6432291666666666
+    ],
+    "margin_fraction": 0.037037037037037035
   },
   "legend_trials/faction_icon_mauler.png": {
     "file": "legend_unavailable_mauler.png",
-    "box": [
-      205,
-      1440,
-      434,
-      1475
-    ],
     "threshold": 0.91,
-    "margin": 40
+    "region": [
+      0.18981481481481483,
+      0.75,
+      0.40185185185185185,
+      0.7682291666666666
+    ],
+    "margin_fraction": 0.037037037037037035
   },
   "legend_trials/tower_icon_lightbearer.png": {
     "file": "tower_light.png",
-    "box": [
-      40,
-      154,
-      146,
-      252
-    ],
     "threshold": 0.91,
-    "margin": 60
+    "region": [
+      0.037037037037037035,
+      0.08020833333333334,
+      0.13518518518518519,
+      0.13125
+    ],
+    "margin_fraction": 0.05555555555555555
   },
   "legend_trials/challenge_ch.png": {
     "file": "legend_challenge.png",
-    "box": [
-      0,
-      350,
-      1080,
-      1660
-    ],
     "threshold": 0.91,
-    "margin": 0
+    "region": [
+      0.0,
+      0.18229166666666666,
+      1.0,
+      0.8645833333333334
+    ],
+    "margin_fraction": 0.0
   },
   "ios/next.png": {
     "file": "trial_next.png",
-    "box": [
-      678,
-      1720,
-      821,
-      1775
-    ],
     "threshold": 0.91,
-    "margin": 60
+    "region": [
+      0.6277777777777778,
+      0.8958333333333334,
+      0.7601851851851852,
+      0.9244791666666666
+    ],
+    "margin_fraction": 0.05555555555555555
   },
   "ios/trial_rewards.png": {
     "file": "trial_rewards.png",
-    "box": [
-      392,
-      1182,
-      677,
-      1215
-    ],
     "threshold": 0.91,
-    "margin": 60
+    "region": [
+      0.362962962962963,
+      0.615625,
+      0.6268518518518519,
+      0.6328125
+    ],
+    "margin_fraction": 0.05555555555555555
   },
   "battle/manual_battle.png": {
     "file": "manual.png",
-    "box": [
-      170,
-      420,
-      490,
-      540
-    ],
     "threshold": 0.9,
-    "margin": 0
+    "region": [
+      0.1574074074074074,
+      0.21875,
+      0.4537037037037037,
+      0.28125
+    ],
+    "margin_fraction": 0.0
   },
   "battle/manual_battle_old1.png": {
     "file": "manual.png",
-    "box": [
-      170,
-      420,
-      490,
-      540
-    ],
     "threshold": 0.9,
-    "margin": 0
+    "region": [
+      0.1574074074074074,
+      0.21875,
+      0.4537037037037037,
+      0.28125
+    ],
+    "margin_fraction": 0.0
   },
   "ios/phantimal_next.png": {
     "file": "phantimal_next.png",
-    "box": [
-      560,
-      1725,
-      1002,
-      1780
-    ],
     "threshold": 0.91,
-    "margin": 45
+    "region": [
+      0.5185185185185185,
+      0.8984375,
+      0.9277777777777778,
+      0.9270833333333334
+    ],
+    "margin_fraction": 0.041666666666666664
   }
 }

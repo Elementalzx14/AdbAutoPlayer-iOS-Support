@@ -115,11 +115,14 @@ jobs:
           PYTAURI_STANDALONE: 1
           PYTHON_PATH: ${{ runner.os == 'Windows' && './src-tauri/pyembed/python/python.exe' || './src-tauri/pyembed/python/bin/python3' }}
         run: |
-          uv pip install \
-              --exact \
-              --compile-bytecode \
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            uv pip install --exact --compile-bytecode \
               --python=${{ env.PYTHON_PATH }} \
-              ./src-tauri
+              --override scripts/windows/ios-runtime-overrides.txt './src-tauri[ios]'
+          else
+            uv pip install --exact --compile-bytecode \
+              --python=${{ env.PYTHON_PATH }} ./src-tauri
+          fi
 
       # Set build environment variables, see:
       # <https://pytauri.github.io/pytauri/latest/usage/tutorial/build-standalone/#build-and-bundle>

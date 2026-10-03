@@ -6,6 +6,7 @@ from functools import cached_property
 from pathlib import Path
 
 from adb_auto_player.device.adb import AdbController, DeviceStream
+from adb_auto_player.device.protocol import DeviceController
 from adb_auto_player.exceptions import AutoPlayerUnrecoverableError
 from adb_auto_player.file_loader import SettingsLoader
 from adb_auto_player.models import ConfidenceValue
@@ -49,7 +50,7 @@ class Game(
         self.package_name_prefixes: list[str] = []
         # Assuming landscape for most games
         self.base_resolution: Resolution = Resolution.from_string("1920x1080")
-        self._device: AdbController | None = None
+        self._device: DeviceController | None = None
         self._stream: DeviceStream | None = None
         self._target_package_name: str | None = None
 
@@ -83,7 +84,7 @@ class Game(
         return self.app_settings.advanced.template_timeout
 
     @property
-    def device(self) -> AdbController:
+    def device(self) -> DeviceController:
         """Lazily-initialised ADB device controller."""
         if self._device is None:
             if SettingsLoader.adb_settings().ios.enabled:
@@ -93,6 +94,15 @@ class Game(
             else:
                 self._device = AdbController()
         return self._device
+
+    @property
+    def _platform_package_prefixes(self) -> list[str]:
+        """Resolve package names once at the device boundary."""
+        if SettingsLoader.adb_settings().ios.enabled:
+            from adb_auto_player.device.ios.bundles import resolve_bundle
+
+            return [resolve_bundle(self.package_name_prefixes)]
+        return self.package_name_prefixes
 
     @property
     def display_info(self) -> DisplayInfo:

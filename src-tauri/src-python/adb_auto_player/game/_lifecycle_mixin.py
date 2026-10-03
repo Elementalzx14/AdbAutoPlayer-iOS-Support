@@ -46,7 +46,7 @@ class _LifecycleMixin(_GameBase):
         if app := self.device.get_running_app():
             if self._target_package_name:
                 return app == self._target_package_name
-            if any(pn in app for pn in self.package_name_prefixes):
+            if any(pn in app for pn in self._platform_package_prefixes):
                 self._target_package_name = app
                 return True
         return False

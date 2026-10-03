@@ -7,7 +7,8 @@ from time import sleep
 from typing import Literal
 
 import numpy as np
-from adb_auto_player.device.adb import AdbController, DeviceStream
+from adb_auto_player.device.adb import DeviceStream
+from adb_auto_player.device.protocol import DeviceController
 from adb_auto_player.models import ConfidenceValue
 from adb_auto_player.models.device import DisplayInfo, Resolution
 from adb_auto_player.models.geometry import Coordinates, Point
@@ -31,7 +32,7 @@ class _GameBase(ABC):
     default_threshold: ConfidenceValue
     package_name_prefixes: list[str]
     base_resolution: Resolution
-    _device: AdbController | None
+    _device: DeviceController | None
     _stream: DeviceStream | None
     _target_package_name: str | None
 
@@ -47,7 +48,7 @@ class _GameBase(ABC):
 
     @property
     @abstractmethod
-    def device(self) -> AdbController:
+    def device(self) -> DeviceController:
         """Active ADB device controller."""
         ...
 

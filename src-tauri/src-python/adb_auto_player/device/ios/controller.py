@@ -1,6 +1,8 @@
 """Apple USB implementation of the device operations used by existing games."""
 
-import base64
+import logging
+import shutil
+import tempfile
 import json
 from pathlib import Path
 import queue
@@ -25,16 +27,22 @@ class IOSController:
         self._lock = threading.RLock()
         self._responses = queue.Queue()
         self._process = None
+        self._session = None
+        self.metadata = {}
         self._instances.add(self)
 
     def _connect(self):
         if self._process is not None:
             return
+        self._responses = queue.Queue()
+        self._session = Path(tempfile.mkdtemp(prefix="adb-ios-"))
         command = worker_command()
         command[-1] = str(Path(__file__).with_name("device_worker.py"))
         command += [
             "--workdir",
             str(SettingsLoader.get_app_config_dir().parent / "ios-device"),
+            "--session",
+            str(self._session),
             "--width",
             str(self.resolution.width),
             "--height",
@@ -52,15 +60,16 @@ class IOSController:
         )
 
         process = self._process
+        responses = self._responses
 
         def read_responses():
             try:
                 for line in process.stdout:
-                    self._responses.put(json.loads(line))
+                    responses.put(json.loads(line))
             except Exception as exc:
-                self._responses.put({"error": str(exc)})
+                responses.put({"error": str(exc)})
             finally:
-                self._responses.put({"error": "Apple USB worker disconnected."})
+                responses.put({"error": "Apple USB worker disconnected."})
 
         threading.Thread(target=read_responses, daemon=True).start()
 
@@ -70,8 +79,15 @@ class IOSController:
             if self.stop_requested():
                 raise KeyboardInterrupt
             self._connect()
-            self._process.stdin.write(json.dumps({"action": action, **values}) + "\n")
-            self._process.stdin.flush()
+            try:
+                self._process.stdin.write(
+                    json.dumps({"action": action, **values}) + "\n"
+                )
+                self._process.stdin.flush()
+            except (OSError, ValueError) as exc:
+                raise AutoPlayerUnrecoverableError(
+                    "iOS worker disconnected. Reconnect and unlock the device, then restart the task."
+                ) from exc
             for _ in range(360):
                 if self.stop_requested():
                     raise KeyboardInterrupt
@@ -91,7 +107,7 @@ class IOSController:
         return "Apple USB"
 
     def get_display_info(self):
-        self.request("check_orientation")
+        self._update_metadata(self.request("check_orientation"))
         orientation = (
             Orientation.PORTRAIT
             if self.resolution.height > self.resolution.width
@@ -99,8 +115,38 @@ class IOSController:
         )
         return DisplayInfo(resolution=self.resolution, orientation=orientation)
 
+    def _update_metadata(self, metadata):
+        if not self.metadata:
+            logging.info(
+                "iOS device: %s; iOS %s; native screenshot %s; canvas %s",
+                metadata["model"],
+                metadata["ios_version"],
+                metadata["native_size"],
+                metadata["canvas_size"],
+            )
+            ratio = metadata["native_size"][1] / metadata["native_size"][0]
+            if not 2.1 <= ratio <= 2.25:
+                logging.warning(
+                    "This iOS aspect ratio is unverified (iPad/SE layouts require testing). Capture a debug report before automation."
+                )
+        self.metadata = metadata
+
     def screenshot(self, package_name_prefixes=None):
-        return base64.b64decode(self.request("screenshot"))
+        self._update_metadata(self.request("screenshot"))
+        return (self._session / "frame.bmp").read_bytes()
+
+    def capture_debug(self, destination):
+        """Save one native frame and its exact normalized counterpart locally."""
+        self._update_metadata(self.request("debug_capture"))
+        destination.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(self._session / "native.png", destination / "native.png")
+        shutil.copyfile(self._session / "frame.bmp", destination / "normalized.bmp")
+        return dict(self.metadata)
+
+    def set_display_size(self, display_size):
+        raise AutoPlayerUnrecoverableError(
+            "iOS uses a virtual canvas; its physical display cannot be resized."
+        )
 
     def tap(self, coordinates):
         self.request("tap", x=coordinates.x, y=coordinates.y)
@@ -137,9 +183,9 @@ class IOSController:
         self.request("stop", package=package_name)
 
     def press_back_button(self):
-        # iOS has no global Android Back key. Only a verified in-game button is used.
-        template = SettingsLoader.games_dir() / "afk_journey/templates/back.png"
-        self.request("back", template=str(template))
+        raise AutoPlayerUnrecoverableError(
+            "iOS has no system Back key; use a verified game navigation template."
+        )
 
     def press_enter(self):
         raise AutoPlayerUnrecoverableError(
@@ -165,6 +211,11 @@ class IOSController:
                 except subprocess.TimeoutExpired:
                     process.terminate()
                     process.wait(timeout=5)
+
+        if self._session is not None:
+            shutil.rmtree(self._session, ignore_errors=True)
+            self._session = None
+        self.metadata = {}
 
     @classmethod
     def close_all(cls):

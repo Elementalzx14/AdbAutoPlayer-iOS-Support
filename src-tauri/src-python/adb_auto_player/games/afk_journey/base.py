@@ -6,7 +6,7 @@ from datetime import timedelta
 from time import monotonic, sleep
 from typing import Any
 
-from adb_auto_player.decorators import register_cache, register_game
+from adb_auto_player.decorators import register_cache, register_game, register_command
 from adb_auto_player.exceptions import (
     AutoPlayerWarningError,
     GameActionFailedError,
@@ -16,7 +16,7 @@ from adb_auto_player.exceptions import (
 from adb_auto_player.game import Game
 from adb_auto_player.image_manipulation import Cropping
 from adb_auto_player.models import ConfidenceValue
-from adb_auto_player.models.decorators import CacheGroup, GameGUIMetadata
+from adb_auto_player.models.decorators import CacheGroup, GameGUIMetadata, GUIMetadata
 from adb_auto_player.models.device import Resolution
 from adb_auto_player.models.geometry import Point
 from adb_auto_player.models.image_manipulation import CropRegions, CropResult
@@ -52,6 +52,18 @@ class AFKJourneyBase(
     Game,
 ):
     """AFK Journey Base Class."""
+
+    @register_command(
+        name="CaptureDeviceDebug",
+        gui=GUIMetadata(
+            label="Capture Debug Screenshot",
+            category=AFKJCategory.WIP_PLEASE_TEST,
+            tooltip="Save a local screenshot report. iOS includes native pixels, normalized frame, device details and template scores.",
+        ),
+    )
+    def capture_device_debug(self):
+        """Capture the current screen without starting a game task."""
+        self.capture_debug_screenshot("manual")
 
     def __init__(self) -> None:
         """Initialize AFKJourneyBase."""
@@ -365,7 +377,7 @@ class AFKJourneyBase(
             template="battle/copy.png",
             crop_regions=CropRegions(left=0.3, right=0.1, top=0.7, bottom=0.1),
             threshold=ConfidenceValue("75%"),
-            sleep_duration=0.5 if self.using_ios else 1.5,
+            sleep_duration=self.layout.formation_poll_seconds,
         )
 
         cancel = self.game_find_template_match(
@@ -497,24 +509,11 @@ class AFKJourneyBase(
         """
         spend_gold: str = self._get_settings_for_mode("spend_gold")
 
-        if self.using_ios:
-            # Locate the actual button once; a preliminary Records screenshot
-            # adds a USB round trip without proving the Battle button is ready.
-            result = self.wait_for_template("battle/battle.png", timeout=10)
-        else:
-            result = self.wait_for_any_template(
-                templates=[
-                    "battle/records.png",
-                    "battle/formations_icon.png",
-                    "battle/battle.png",
-                ],
-                crop_regions=CropRegions(top=0.5),
-                timeout=10,
-            )
+        result = self.layout.battle_ready(self)
 
         try:
             # Tap immediately to avoid skipping due to visual glitches
-            battle_point = result if self.using_ios else Point(x=850, y=1780)
+            battle_point = self.layout.battle_point(result)
             self.tap(battle_point)
             self._tap_coordinates_till_template_disappears(
                 coordinates=battle_point,
