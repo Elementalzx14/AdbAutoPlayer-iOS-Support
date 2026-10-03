@@ -17,7 +17,7 @@ early fork revisions. JSON template manifests are compared by canonical contents
 to tolerate formatting changes. Unknown changes and modified stock files remain
 protected. Every replaced existing file is backed up, including accepted leftovers;
 rollback and Restore preserve those previous contents. The game backend and runtime
-dependencies are unchanged from v2. Eighteen installer regression tests cover the
+dependencies are unchanged from v2. Nineteen installer regression tests cover the
 original checks and these additional upgrade/restore cases.
 
 ## Runtime integration

@@ -31,6 +31,14 @@ def legacy_additions(repo, paths):
                 if member.name.endswith(".py"):
                     data = data.replace(b"\r\n", b"\n")
                 result[member.name]["previous"].add(hashlib.sha256(data).hexdigest())
+                if member.name.endswith((".txt", ".json")):
+                    # git archive can apply Windows checkout line endings.
+                    # Early manual installs also used the original Git LF bytes.
+                    lf = data.replace(b"\r\n", b"\n")
+                    for variant in (lf, lf.replace(b"\n", b"\r\n")):
+                        result[member.name]["previous"].add(
+                            hashlib.sha256(variant).hexdigest()
+                        )
                 if member.name.endswith(".json"):
                     canonical = json.dumps(
                         json.loads(data), sort_keys=True, separators=(",", ":")

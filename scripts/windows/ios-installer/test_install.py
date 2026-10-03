@@ -1,8 +1,10 @@
 """Installer version checks, atomic writes, rollback and interrupted recovery."""
 
 import importlib.util
+import io
 import json
 import sys
+import tarfile
 import tempfile
 import unittest
 from pathlib import Path
@@ -204,6 +206,35 @@ class InstallerTests(unittest.TestCase):
         self.assertTrue(installer.compatible_existing(target, item))
         target.write_text('{"region": [0.1, 0.8]}')
         self.assertFalse(installer.compatible_existing(target, item))
+
+    def test_archived_legacy_text_accepts_git_and_windows_line_endings(self):
+        build_spec = importlib.util.spec_from_file_location(
+            "ios_build", Path(__file__).with_name("build.py")
+        )
+        builder = importlib.util.module_from_spec(build_spec)
+        build_spec.loader.exec_module(builder)
+        name = "src-tauri/src-python/adb_auto_player/device/ios/requirements.txt"
+        content = b"pymobiledevice3==11.19.4\r\n"
+        archive = io.BytesIO()
+        with tarfile.open(fileobj=archive, mode="w") as output:
+            info = tarfile.TarInfo(name)
+            info.size = len(content)
+            output.addfile(info, io.BytesIO(content))
+        with (
+            patch.object(builder, "LEGACY_REFS", ["legacy"]),
+            patch.object(
+                builder.subprocess, "check_output", return_value=archive.getvalue()
+            ),
+        ):
+            fingerprints = builder.legacy_additions(self.root, [name])[name]
+        for data in (content, content.replace(b"\r\n", b"\n")):
+            self.assertIn(
+                installer.hashlib.sha256(data).hexdigest(), fingerprints["previous"]
+            )
+        self.assertNotIn(
+            installer.hashlib.sha256(b"unknown requirements\n").hexdigest(),
+            fingerprints["previous"],
+        )
 
     def test_legacy_restore_with_isolated_module_search_path(self):
         target = self.app / "Lib/site-packages/adb_auto_player/legacy.py"
