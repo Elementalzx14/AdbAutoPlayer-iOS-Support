@@ -132,16 +132,20 @@ class IOSController:
         self.metadata = metadata
 
     def screenshot(self, package_name_prefixes=None):
-        self._update_metadata(self.request("screenshot"))
-        return (self._session / "frame.bmp").read_bytes()
+        # Keep ownership until the frame has been read, so another caller cannot
+        # replace the shared file between the reply and the read.
+        with self._lock:
+            self._update_metadata(self.request("screenshot"))
+            return (self._session / "frame.bmp").read_bytes()
 
     def capture_debug(self, destination):
         """Save one native frame and its exact normalized counterpart locally."""
-        self._update_metadata(self.request("debug_capture"))
-        destination.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(self._session / "native.png", destination / "native.png")
-        shutil.copyfile(self._session / "frame.bmp", destination / "normalized.bmp")
-        return dict(self.metadata)
+        with self._lock:
+            self._update_metadata(self.request("debug_capture"))
+            destination.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(self._session / "native.png", destination / "native.png")
+            shutil.copyfile(self._session / "frame.bmp", destination / "normalized.bmp")
+            return dict(self.metadata)
 
     def set_display_size(self, display_size):
         raise AutoPlayerUnrecoverableError(
