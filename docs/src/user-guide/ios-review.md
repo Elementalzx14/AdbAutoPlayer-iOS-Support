@@ -107,6 +107,10 @@ towers, other modes, hero skins, fresh computer setup and iPads remain unverifie
   all 39 original dependency versions were preserved. Restoration matched 5,941
   original files byte-for-byte (excluding regenerable Python caches), preserved
   the test settings, and removed every newly added payload file.
+  The full v1-to-v2 upgrade also passed. After upgrading, the installed backend
+  captured three AFK Journey frames from the test iPhone in 0.69–0.84 seconds each.
+  A final restore returned the disposable app to stock. The user's main installed
+  app was not modified by these installer tests.
 - 11 installer regression tests passed, including failed-write recovery, corrupt
   backups, later app changes, and legacy restoration with an isolated module path.
 - 105 focused device/layout/navigation/battle/Union Campaign and installer tests passed.

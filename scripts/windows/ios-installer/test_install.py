@@ -19,7 +19,8 @@ class InstallerTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
+        # Match the CLI boundary, including Windows short-name temp directories.
+        self.root = Path(self.temp.name).resolve()
         self.app = self.root / "app"
         self.payload = self.root / "payload"
         self.app.mkdir()
