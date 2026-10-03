@@ -15,7 +15,7 @@ class Setup : Form {
     const string Release = "https://github.com/AdbAutoPlayer/AdbAutoPlayer/releases/tag/12.13.0";
 
     Setup() {
-        Text = "AdbAutoPlayer iOS Support - 12.13.0 Setup v2";
+        Text = "AdbAutoPlayer iOS Support - 12.13.0 Setup v3";
         ClientSize = new Size(680, 430); StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false;
         Font = new Font("Segoe UI", 10);

@@ -54,6 +54,31 @@ def atomic_copy(source, target):
         temporary.unlink(missing_ok=True)
 
 
+def compatible_existing(target, item):
+    """Recognize stock, identical payloads, and known leftover iOS additions."""
+    if not target.is_file():
+        return False
+    actual = digest(target)
+    if actual in {item["stock"], item["current"]}:
+        return True
+    # Earlier app upgrades overwrote stock files but left added iOS files behind.
+    # Only allow known versions of additions; never trust arbitrary modifications.
+    if item["stock"] is not None:
+        return False
+    if actual in item.get("previous", []):
+        return True
+    if target.suffix == ".json" and item.get("previous_json"):
+        try:
+            value = json.loads(target.read_text(encoding="utf-8-sig"))
+            canonical = json.dumps(value, sort_keys=True, separators=(",", ":"))
+            return (
+                hashlib.sha256(canonical.encode()).hexdigest() in item["previous_json"]
+            )
+        except (ValueError, UnicodeError):
+            return False
+    return False
+
+
 def check(app, payload):
     manifest = json.loads((payload / "manifest.json").read_text())
     if (app / PENDING).exists():
@@ -77,7 +102,7 @@ def check(app, payload):
         if not source.is_file() or digest(source) != item["current"]:
             raise RuntimeError("Installer payload is damaged: " + item["path"])
         if target.exists():
-            if not target.is_file() or digest(target) != item["stock"]:
+            if not compatible_existing(target, item):
                 raise RuntimeError("Unexpected app modification: " + item["path"])
         elif item["stock"] is not None:
             raise RuntimeError("The app installation is incomplete: " + item["path"])
@@ -147,7 +172,7 @@ def install(app, payload):
         restore_files(app, state)
         (app / PENDING).unlink(missing_ok=True)
         raise
-    print("Installed iOS Support v2 for AdbAutoPlayer 12.13.0.")
+    print("Installed iOS Support v3 for AdbAutoPlayer 12.13.0.")
     print("Uses the app's Python 3.13. No separate iOS runtime was installed.")
     print(
         "Game settings were preserved. Enable iOS in ADB Settings and leave iOS Python Path blank."

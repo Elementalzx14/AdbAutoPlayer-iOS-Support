@@ -1,7 +1,7 @@
 # Windows iOS Support installer for AdbAutoPlayer 12.13.0
 
 This is an **add-on installer** for the official Windows x64 12.13.0 release.
-Version 2 adds iOS dependencies to the app's existing Python 3.13 runtime.
+Version 3 adds iOS dependencies to the app's existing Python 3.13 runtime.
 It does not install a second Python runtime. All add-on files are included for
 offline installation; downloading the base app and Apple drivers requires internet.
 Users do not need Python, a terminal, or a Mac to install the add-on.
@@ -14,7 +14,7 @@ The installer is unsigned; no publisher certificate is included.
 2. Download and install `AdbAutoPlayer_12.13.0_x64-setup.exe` from the
    [official 12.13.0 release](https://github.com/AdbAutoPlayer/AdbAutoPlayer/releases/tag/12.13.0).
 3. Close AdbAutoPlayer and any running tasks.
-4. Run `AdbAutoPlayer-iOS-Support-12.13.0-v2-Setup.exe`. Confirm the app folder
+4. Run `AdbAutoPlayer-iOS-Support-12.13.0-v3-Setup.exe`. Confirm the app folder
    (normally `%LOCALAPPDATA%\AdbAutoPlayer`) and click **Install iOS Support**.
 5. Connect one iPhone by USB, unlock it, and accept **Trust This Computer**.
    Open AFK Journey in English, portrait orientation. Keep the phone unlocked.
@@ -34,11 +34,20 @@ the iOS add-on; do not assume this installer works on a different version.
 
 ## Updating the first iOS installer
 
-Close AdbAutoPlayer. Run this v2 installer and choose **Restore previous files**
-first, then **Install iOS Support**. The v2 installer understands the original
+Close AdbAutoPlayer. Run this v3 installer and choose **Restore previous files**
+first, then **Install iOS Support**. The v3 installer understands the original
 preview's backup format. Your game settings are preserved. If the app itself was
 updated or its original backups were removed, install a clean official 12.13.0 copy
 and apply the add-on there instead.
+
+## Existing manually patched installations
+
+Version 3 fixes the rejection of recognized iOS files left behind when the official
+app was installed over an earlier manual iOS setup. These files do not have an
+installer marker. Run **Install iOS Support** directly: identical payload files and
+known early iOS additions are recognized, backed up, and replaced. Restore returns
+the exact previous files. Unknown changes are still rejected before installation.
+The game backend and dependencies are otherwise identical to the v2 installer.
 
 ## Restore
 

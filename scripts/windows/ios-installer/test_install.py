@@ -139,6 +139,72 @@ class InstallerTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "Restore previous files"):
             installer.check(self.app, self.payload)
 
+    def test_matching_existing_addition_is_preserved_on_restore(self):
+        (self.app / self.new).write_text("dependency")
+        installer.install(self.app, self.payload)
+        installer.restore(self.app)
+        self.assertEqual((self.app / self.new).read_text(), "dependency")
+        self.assertEqual((self.app / self.old).read_text(), "old backend")
+
+    def test_identical_patched_stock_file_is_backed_up(self):
+        (self.app / self.old).write_text("new backend")
+        installer.install(self.app, self.payload)
+        installer.restore(self.app)
+        self.assertEqual((self.app / self.old).read_text(), "new backend")
+
+    def known_legacy_addition(self):
+        (self.app / self.new).write_text("known old iOS file")
+        self.manifest["files"][1]["previous"] = [installer.digest(self.app / self.new)]
+        (self.payload / "manifest.json").write_text(json.dumps(self.manifest))
+
+    def test_legacy_addition_is_upgraded_and_restored(self):
+        self.known_legacy_addition()
+        installer.install(self.app, self.payload)
+        self.assertEqual((self.app / self.new).read_text(), "dependency")
+        installer.restore(self.app)
+        self.assertEqual((self.app / self.new).read_text(), "known old iOS file")
+        self.assertEqual((self.app / "AFKJourney.toml").read_text(), "attempts = 7")
+
+    def test_failed_legacy_upgrade_restores_existing_additions(self):
+        self.known_legacy_addition()
+        with patch.object(
+            installer, "validate_runtime", side_effect=RuntimeError("imports failed")
+        ):
+            with self.assertRaisesRegex(RuntimeError, "imports failed"):
+                installer.install(self.app, self.payload)
+        self.assertEqual((self.app / self.new).read_text(), "known old iOS file")
+        self.assertEqual((self.app / self.old).read_text(), "old backend")
+        self.assertFalse((self.app / installer.PENDING).exists())
+
+    def test_unknown_addition_is_not_overwritten(self):
+        (self.app / self.new).write_text("unrecognized user change")
+        with self.assertRaisesRegex(RuntimeError, "Unexpected app modification"):
+            installer.install(self.app, self.payload)
+        self.assertEqual((self.app / self.new).read_text(), "unrecognized user change")
+        self.assertEqual((self.app / self.old).read_text(), "old backend")
+
+    def test_legacy_allowlist_does_not_override_stock_file_protection(self):
+        (self.app / self.old).write_text("unrecognized stock change")
+        self.manifest["files"][0]["previous"] = [installer.digest(self.app / self.old)]
+        (self.payload / "manifest.json").write_text(json.dumps(self.manifest))
+        with self.assertRaisesRegex(RuntimeError, "Unexpected app modification"):
+            installer.install(self.app, self.payload)
+
+    def test_legacy_json_formatting_allowed_but_changed_values_rejected(self):
+        target = self.app / "manifest.json"
+        target.write_text('{\n  "region": [0.1, 0.2]\n}\n')
+        canonical = json.dumps(
+            {"region": [0.1, 0.2]}, sort_keys=True, separators=(",", ":")
+        )
+        item = {
+            "stock": None,
+            "current": "new",
+            "previous_json": [installer.hashlib.sha256(canonical.encode()).hexdigest()],
+        }
+        self.assertTrue(installer.compatible_existing(target, item))
+        target.write_text('{"region": [0.1, 0.8]}')
+        self.assertFalse(installer.compatible_existing(target, item))
+
     def test_legacy_restore_with_isolated_module_search_path(self):
         target = self.app / "Lib/site-packages/adb_auto_player/legacy.py"
         target.parent.mkdir()

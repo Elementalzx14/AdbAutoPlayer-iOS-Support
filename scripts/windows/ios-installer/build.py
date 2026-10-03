@@ -2,13 +2,46 @@
 
 import argparse
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
+import tarfile
 import tempfile
 import zipfile
+
+# Published early iOS source revisions, before the shared Python runtime update.
+LEGACY_REFS = ("6c718615", "61bb078a", "7c062064", "02c02ef9")
+
+
+def legacy_additions(repo, paths):
+    """Fingerprint known early iOS files without extracting them to disk."""
+    result = {path: {"previous": set(), "previous_json": set()} for path in paths}
+    for ref in LEGACY_REFS:
+        archive = subprocess.check_output(
+            ["git", "archive", ref, "src-tauri/src-python/adb_auto_player"], cwd=repo
+        )
+        with tarfile.open(fileobj=io.BytesIO(archive)) as contents:
+            for member in contents:
+                if not member.isfile() or member.name not in result:
+                    continue
+                data = contents.extractfile(member).read()
+                if member.name.endswith(".py"):
+                    data = data.replace(b"\r\n", b"\n")
+                result[member.name]["previous"].add(hashlib.sha256(data).hexdigest())
+                if member.name.endswith(".json"):
+                    canonical = json.dumps(
+                        json.loads(data), sort_keys=True, separators=(",", ":")
+                    )
+                    result[member.name]["previous_json"].add(
+                        hashlib.sha256(canonical.encode()).hexdigest()
+                    )
+    return {
+        path: {key: sorted(values) for key, values in hashes.items() if values}
+        for path, hashes in result.items()
+    }
 
 
 def digest(path):
@@ -39,6 +72,17 @@ def main():
         if not source.is_file():
             raise RuntimeError("Deleted stock backend files are unsupported: " + file)
         files["Lib/site-packages/adb_auto_player/" + file[len(prefix) :]] = source
+    legacy = legacy_additions(
+        repo,
+        [
+            file
+            for file in backend
+            if not (
+                args.stock
+                / ("Lib/site-packages/adb_auto_player/" + file[len(prefix) :])
+            ).exists()
+        ],
+    )
     for source in (args.prepared / "Lib/site-packages").rglob("*"):
         if (
             not source.is_file()
@@ -52,7 +96,7 @@ def main():
             files.setdefault(relative, source)
     manifest = {
         "format": 2,
-        "version": "12.13.0-ios.2",
+        "version": "12.13.0-ios.3",
         "files": [],
         "base": {
             name: digest(args.stock / name)
@@ -69,6 +113,11 @@ def main():
                         "path": relative,
                         "current": digest(source),
                         "stock": digest(original) if original.exists() else None,
+                        **legacy.get(
+                            "src-tauri/src-python/"
+                            + relative.removeprefix("Lib/site-packages/"),
+                            {},
+                        ),
                     }
                 )
                 z.write(source, "files/" + relative)
@@ -109,7 +158,7 @@ def main():
         digest(output) + "  " + output.name + "\n"
     )
     output.with_suffix(".manifest.json").write_text(json.dumps(manifest, indent=2))
-    shutil.copy2(here / "README.md", output.parent / "INSTALL-iOS-Support-v2.md")
+    shutil.copy2(here / "README.md", output.parent / "INSTALL-iOS-Support-v3.md")
     print(
         f"Built {output.name}: {len(files)} files; {output.stat().st_size / 1024 / 1024:.1f} MiB"
     )

@@ -2,8 +2,9 @@
 
 **Source update (2026-10-03):** See [maintainer review and test results](ios-review.md)
 for the Python 3.13 integration, uniform layout, diagnostics and current limitations.
-The downloadable `v12.13.0-ios.2` add-on includes these changes and uses the app's
+The downloadable `v12.13.0-ios.3` add-on includes these changes and uses the app's
 existing Python runtime. The older `v12.13.0-ios.1` release is retained for reference.
+Version 3 also recognizes known files left over from an earlier manual iOS setup.
 
 
 The full original menu and Game
@@ -44,7 +45,7 @@ have image regression coverage, not exhaustive live coverage for every hero/skin
 Changing game layouts may require additional recognition images.
 
 The fork now includes upstream 12.13.0. The add-on installer preserves that
-release's UI executable and existing Python dependency versions. The v2 installer
+release's UI executable and existing Python dependency versions. The v3 installer
 adds iOS dependencies to the existing Python 3.13 runtime. The older navigation-image
 fallback has been removed.
 
@@ -56,7 +57,7 @@ See [installer instructions](../../../scripts/windows/ios-installer/README.md).
 Official upstream installers alone do not contain the iOS changes.
 
 On Windows, install Apple's USB device support (Apple Devices), official AdbAutoPlayer
-12.13.0, and the v2 add-on. No separate Python installation or terminal is required.
+12.13.0, and the v3 add-on. No separate Python installation or terminal is required.
 Connect exactly one iPhone, unlock it, and accept Trust This Computer. Enable
 Developer Mode if requested during connection setup.
 

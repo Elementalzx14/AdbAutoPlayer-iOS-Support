@@ -1,8 +1,24 @@
 # iOS maintainer review — 2026-10-03
 
 This branch builds on upstream 12.13.0 and retains the original game menu and settings.
-The `v12.13.0-ios.2` add-on installer includes this review and uses the app's existing
+The `v12.13.0-ios.3` add-on installer includes this review and uses the app's existing
 Python 3.13. The older `v12.13.0-ios.1` installer remains available for reference.
+
+## Installer correction after a user report
+
+The v2 clean-install and marked-preview upgrade tests missed a real condition:
+installing upstream over the earlier manual iOS setup left 49 added iOS files and
+no installer marker. V2 rejected even an identical `device/ios/__init__.py` because
+it expected every added file to be absent. Those tests did not cover every upgrade
+state, and their passing result must not be described that way.
+
+V3 accepts files identical to its payload and fingerprinted additions from the
+early fork revisions. JSON template manifests are compared by canonical contents
+to tolerate formatting changes. Unknown changes and modified stock files remain
+protected. Every replaced existing file is backed up, including accepted leftovers;
+rollback and Restore preserve those previous contents. The game backend and runtime
+dependencies are unchanged from v2. Eighteen installer regression tests cover the
+original checks and these additional upgrade/restore cases.
 
 ## Runtime integration
 
