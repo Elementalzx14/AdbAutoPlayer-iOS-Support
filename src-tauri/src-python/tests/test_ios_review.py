@@ -143,3 +143,20 @@ def test_locked_device_rejects_input_before_touch(tmp_path):
     assert phone.hid is None
     phone.lockdown.get_value.return_value = False
     asyncio.run(phone.ensure_unlocked())
+
+
+def test_embedded_host_uses_bundled_python_not_desktop_exe(tmp_path):
+    (tmp_path / "python.exe").touch()
+    with (
+        patch.object(
+            integration.SettingsLoader, "adb_settings", return_value=AdbSettings()
+        ),
+        patch.object(
+            integration.SettingsLoader, "get_resource_dir", return_value=tmp_path
+        ),
+        patch.object(integration.importlib.util, "find_spec", return_value=object()),
+        patch.object(
+            integration.sys, "executable", str(tmp_path / "adb-auto-player.exe")
+        ),
+    ):
+        assert integration.worker_command()[0] == str(tmp_path / "python.exe")

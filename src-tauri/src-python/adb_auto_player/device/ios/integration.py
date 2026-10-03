@@ -32,7 +32,14 @@ def worker_command():
     if configured:
         runtime = Path(configured)
     elif importlib.util.find_spec("pymobiledevice3") is not None:
-        runtime = Path(sys.executable)
+        executable = Path(sys.executable)
+        # An embedded Rust host may report the desktop EXE as sys.executable.
+        # Spawn its bundled Python, never recursively launch the desktop UI.
+        runtime = (
+            executable
+            if executable.name.lower().startswith("python")
+            else SettingsLoader.get_resource_dir() / "python.exe"
+        )
     else:
         # Compatibility with previously shipped add-on installations.
         runtime = SettingsLoader.get_resource_dir() / "ios-runtime/Scripts/python.exe"

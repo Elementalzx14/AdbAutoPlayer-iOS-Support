@@ -103,7 +103,7 @@ towers, other modes, hero skins, fresh computer setup and iPads remain unverifie
 
 - 105 focused device/layout/navigation/battle/Union Campaign and installer tests passed.
 - 159 AFK mixin tests passed in the broader suite (some overlap with the focused suite).
-- 62 iOS-specific tests passed in the actual isolated Python 3.13 environment, including
+- 63 iOS-specific tests passed in the actual isolated Python 3.13 environment, including
   the locked-device input guard and uniform hero matching.
 - Set `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` for this environment: pymobiledevice3's xonsh
   dependency registers a pytest plugin that otherwise tries to open a Windows console.
