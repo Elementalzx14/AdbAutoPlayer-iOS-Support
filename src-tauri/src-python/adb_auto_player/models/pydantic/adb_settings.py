@@ -44,11 +44,12 @@ class IOSSettings(BaseModel):
         title="Enable iOS (Windows only)",
         description="Windows USB connection. Open AFK Journey in "
         "English on an unlocked, "
-        "trusted iPhone with Developer Mode enabled. Tested on iPhone 17 Pro Max, "
-        "iOS 27, portrait 1320 x 2868. Selects the Apple USB connection; "
-        "configure game behavior in Game Settings. Other iPhone/iPad layouts "
-        "and game modes still require device support. AFK/Season AFK battles tested; "
-        "Legend Trial limited testing; Dura navigation only. Other tasks are unverified. "
+        "trusted iPhone or iPad with Developer Mode enabled. Tested on iPhone 17 Pro Max "
+        "and M1 iPad Air (iPadOS 27.2, portrait). Selects the Apple USB connection; "
+        "configure game behavior in Game Settings. iPad AFK victory/advancement tested; "
+        "Season entry/copy/battle/defeat tested, seasonal victory unverified. "
+        "iPad trials and other modes are unverified. iPhone Legend Trial limited testing; "
+        "Dura navigation only. First connection may download Apple developer support. "
         "Use Capture Debug Screenshot to report problems.",
     )
     python_path: str = Field(
@@ -89,7 +90,7 @@ class AdbSettings(TomlSettings):
     """Adb settings model."""
 
     ios: IOSSettings = Field(
-        default_factory=IOSSettings, title="iPhone / iOS (Experimental)"
+        default_factory=IOSSettings, title="iPhone / iPad / iOS (Experimental)"
     )
     device: DeviceSettings = Field(default_factory=DeviceSettings, title="Device")
     wireless_debugging: WirelessDebuggingSettings = Field(

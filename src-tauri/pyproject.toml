@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-ios = ["pymobiledevice3==11.19.4; sys_platform == 'win32'"]
+ios = ["pymobiledevice3==11.19.4; sys_platform == 'win32'", "lzfse==0.4.2.post1; sys_platform == 'win32'"]
 
 [project.scripts]
 adb-auto-player = "adb_auto_player.main_cli:main"
@@ -53,4 +53,4 @@ find = { where = ["src-python"], exclude = ["tests*", "*/tests*"] }
 "*" = ["*.pyd", "*.so"]
 "adb_auto_player.device.ios" = ["requirements.txt"]
 
-"adb_auto_player.games.afk_journey" = ["ios_templates/*.png", "ios_templates/*.json"]
+"adb_auto_player.games.afk_journey" = ["ios_templates/*.png", "ios_templates/*.json", "ios_templates/ipad/*.png", "ios_templates/ipad/*.json"]

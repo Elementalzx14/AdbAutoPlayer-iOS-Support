@@ -123,6 +123,8 @@ def validate_runtime(app):
             "-c",
             "import sys,cv2,numpy,psutil; assert sys.version_info[:2]==(3,13); "
             "from pymobiledevice3.remote.userspace_tunnel import UserspaceRsdTunnel; "
+            "import lzfse; "
+            "from pymobiledevice3.services.mobile_image_mounter import auto_mount; "
             "from adb_auto_player.device.ios.phone import Phone; "
             "from adb_auto_player.device.ios.geometry import Canvas",
         ],
@@ -172,7 +174,7 @@ def install(app, payload):
         restore_files(app, state)
         (app / PENDING).unlink(missing_ok=True)
         raise
-    print("Installed iOS Support v3 for AdbAutoPlayer 12.13.0.")
+    print("Installed iOS Support v4 for AdbAutoPlayer 12.13.0.")
     print("Uses the app's Python 3.13. No separate iOS runtime was installed.")
     print(
         "Game settings were preserved. Enable iOS in ADB Settings and leave iOS Python Path blank."

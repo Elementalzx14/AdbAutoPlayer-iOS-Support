@@ -70,4 +70,5 @@ class AppleLayout(AndroidLayout):
         )
         game.tap(game.wait_for_template(template, timeout=game.min_timeout))
         game.sleep_navigation()
+        game._click_confirm_on_popup()
         return True

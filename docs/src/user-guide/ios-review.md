@@ -150,3 +150,79 @@ SE and iPad layouts require separate game-layout validation. Geometry tests cove
 their aspect ratios and inverse taps, but passing those tests does not validate the
 positions/appearance of game controls on real devices. A different viewport alone
 cannot correct a game UI that rearranges itself.
+
+## M1 iPad connection check (2026-11-01)
+
+Physical device: `iPad13,16`, iPadOS 18.0.1, English portrait, 1640 x 2360.
+Developer Mode was enabled. Initially the developer disk image was not mounted,
+so CoreDevice screenshot and input services were absent. Mounting the developer
+image with the existing Python 3.11 setup tools exposed those services, and the
+Python 3.13 backend captured an AFK Journey screenshot. The fitted viewport was
+x=0, y=183, width=1080, height=1554.
+
+The first attempted tap failed before any touch report was sent: Apple's media
+stream service returned CoreDevice error 9021, "Remote control requires iOS 27.0
+or later on this device." Thus successful capture does not establish remote-input
+compatibility. No navigation, formation copy, battle, or victory was validated on
+this iPad. An OS update and another live input test are needed before layout and
+battle validation can continue; do not describe this device as supported yet.
+
+The source now gives this OS restriction its own error, including model and OS,
+and shares the same session-opening path between taps and swipes. It preserves
+unrelated CoreDevice failures and still checks screen lock before using an existing
+input session. Three new regression tests cover those cases. The connection,
+settings, and review suite passed all 32 tests. These source changes have not yet
+been packaged into a new installer.
+
+The developer-image setup used above remains a separate setup step: the shipped
+Python 3.13 environment excludes lzfse and cannot import the image-mounter module.
+The successful screenshot therefore does not validate automatic developer-image
+setup on a fresh computer or after the device restarts.
+
+## M1 iPad follow-up on iPadOS 27.2 (2026-11-01)
+
+The same iPad was updated to 27.2. USB screenshot capture and remote taps worked
+after loading Apple developer support. The tablet now selects its own measured
+image profile by model, with viewport-relative regions and undistorted templates.
+The iPhone profile remains separate. Unsupported tablet controls do not fall back
+to Android or phone images. Existing menu items, settings files, retries and battle
+handlers remain shared.
+
+Live checks through the original engine:
+
+- Battle Modes > AFK Stage, formation selection and Records formation copy.
+- Ordinary AFK battle victory, followed by Next opening the following formation
+  screen. Recognition assets contain no stage numbers.
+- Season/Phantimal selection, Records copy, battle start, defeat detection
+  and Retry returning to formation setup. No seasonal victory was observed.
+- Back navigation and native/logical coordinate mapping at 1640 x 2360.
+- Original navigation engine returned to the world and re-entered AFK Stages
+  through Battle Modes; ordinary AFK entry handled the daily-limit confirmation.
+- Offline hero matching recognized Mehira in the captured Records row. This is not
+  exhaustive exclusion coverage; other heroes/skins and manual-formation filtering
+  remain unverified on the tablet.
+
+Dependency status changed since the October review: lzfse 0.4.2.post1 now has an
+official CPython 3.13 Windows x64 wheel on PyPI (released October 16). The iOS extra
+and override now pin that wheel instead of excluding lzfse. Automatic developer
+support loading runs through the same Python 3.13 runtime and RSD tunnel; no second
+Python runtime is installed. A physical test unloaded only the temporary developer
+image, used an empty cache, then passed automatic image loading, screenshot capture
+and input authorization. A closed setup reply is checked against the resulting
+service state before reporting failure; image installation is not blindly replayed.
+
+Current scope: experimental M1 iPad Air AFK progression. Seasonal victory/Next,
+manual formation labels, full hero/skin coverage, Dura, Legend and other modes need
+separate tablet validation. Other iPad models and aspect ratios remain unverified.
+The maintainer's separate installer/update feeds and removal of IOSLayoutMixin
+remain follow-up work; this change does not claim to complete that upstream review.
+
+Validation: 134 focused tablet/phone, navigation, battle and installer tests passed.
+The normal Python wheel build includes the tablet manifest and image files.
+Public tests construct synthetic black canvases from independently measured button
+positions. No device screenshots, account names, chat, or player avatars are added
+to the repository. The 18 tablet image assets contain only generic UI labels and
+button icons.
+The v4 installer upgrade/restore test verified all 10,871 installed payload files
+and recovered all 5,990 original disposable-app files, including legacy additions
+and settings, byte-for-byte.

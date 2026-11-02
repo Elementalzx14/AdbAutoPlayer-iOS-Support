@@ -104,7 +104,7 @@ def main():
             files.setdefault(relative, source)
     manifest = {
         "format": 2,
-        "version": "12.13.0-ios.3",
+        "version": "12.13.0-ios.4",
         "files": [],
         "base": {
             name: digest(args.stock / name)
@@ -166,7 +166,7 @@ def main():
         digest(output) + "  " + output.name + "\n"
     )
     output.with_suffix(".manifest.json").write_text(json.dumps(manifest, indent=2))
-    shutil.copy2(here / "README.md", output.parent / "INSTALL-iOS-Support-v3.md")
+    shutil.copy2(here / "README.md", output.parent / "INSTALL-iOS-Support-v4.md")
     print(
         f"Built {output.name}: {len(files)} files; {output.stat().st_size / 1024 / 1024:.1f} MiB"
     )

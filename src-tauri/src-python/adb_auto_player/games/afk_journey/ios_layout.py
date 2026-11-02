@@ -35,9 +35,28 @@ class IOSLayoutMixin:
 
         return AppleLayout() if self.using_ios else AndroidLayout()
 
-    @cached_property
+    @property
     def _ios_visuals(self):
         folder = Path(__file__).with_name("ios_templates")
+        if self._ios_is_tablet:
+            folder /= "ipad"
+        key = str(folder)
+        if key not in self._ios_visual_profiles:
+            self._ios_visual_profiles[key] = self._load_ios_visuals(folder)
+        return self._ios_visual_profiles[key]
+
+    @cached_property
+    def _ios_visual_profiles(self):
+        return {}
+
+    @property
+    def _ios_is_tablet(self):
+        return str(getattr(self.device, "metadata", {}).get("model", "")).startswith(
+            "iPad"
+        )
+
+    @staticmethod
+    def _load_ios_visuals(folder):
         manifest = json.loads((folder / "manifest.json").read_text())
         return {
             name: (spec, cv2.imread(str(folder / spec["file"])))
@@ -50,6 +69,8 @@ class IOSLayoutMixin:
         return metadata.get("viewport", (0, 0, frame.shape[1], frame.shape[0]))
 
     def _ios_match(self, name, frame, threshold=None, diagnostics=None):
+        if name not in self._ios_visuals:
+            return None
         spec, template = self._ios_visuals[name]
         if template is None:
             raise GameActionFailedError("Missing iOS image: " + name)
@@ -58,11 +79,15 @@ class IOSLayoutMixin:
             round(v * (vw if i % 2 == 0 else vh) + (vx if i % 2 == 0 else vy))
             for i, v in enumerate(spec["region"])
         ]
+        rw, rh = spec.get("reference_size", (1080, 1920))
+        sx, sy = vw / rw, vh / rh
+        if "reference_size" in spec:
+            sx = sy = min(sx, sy)
         template = cv2.resize(
             template,
             (
-                max(1, round(template.shape[1] * vw / 1080)),
-                max(1, round(template.shape[0] * vh / 1920)),
+                max(1, round(template.shape[1] * sx)),
+                max(1, round(template.shape[0] * sy)),
             ),
             interpolation=cv2.INTER_AREA,
         )
@@ -72,7 +97,7 @@ class IOSLayoutMixin:
                 for i, v in enumerate(spec["search_region"])
             ]
         margin = round(spec["margin_fraction"] * vw)
-        vertical_margin = round(spec["margin_fraction"] * 1080 * vh / 1920)
+        vertical_margin = round(spec["margin_fraction"] * rw * vh / rh)
         left, top = max(0, x1 - margin), max(0, y1 - vertical_margin)
         roi = frame[
             top : min(frame.shape[0], y2 + vertical_margin),
@@ -118,8 +143,9 @@ class IOSLayoutMixin:
         )
 
     @lru_cache(maxsize=128)
-    def _ios_hero_variants(self, name, vw):
+    def _ios_hero_variants(self, name, vw, tablet=False):
         image = self._load_image(name)
+        scales = np.arange(0.65, 1.36, 0.025) if tablet else np.arange(1.3, 1.61, 0.025)
         # The uniform canvas preserves the original hero icon aspect ratio.
         return [
             cv2.resize(
@@ -128,19 +154,25 @@ class IOSLayoutMixin:
                 fx=float(scale * vw / 1080),
                 fy=float(scale * vw / 1080),
             )
-            for scale in np.arange(1.3, 1.61, 0.025)
+            for scale in scales
         ]
 
     def _ios_find_hero(self, name, frame, threshold):
         # The original Android crop targets the formation board. On this iPhone
         # the unobstructed hero portraits are in the row underneath the board.
         vx, vy, vw, vh = self._ios_viewport(frame)
-        left, top = round(vx + vw * (200 / 1080)), round(vy + vh * (1200 / 1920))
-        roi = frame[
-            top : round(vy + vh * (1400 / 1920)), left : round(vx + vw * (1020 / 1080))
+        region = (
+            (0.34, 0.65, 0.73, 0.74)
+            if self._ios_is_tablet
+            else (200 / 1080, 1200 / 1920, 1020 / 1080, 1400 / 1920)
+        )
+        left, top, right, bottom = [
+            round(v * (vw if i % 2 == 0 else vh) + (vx if i % 2 == 0 else vy))
+            for i, v in enumerate(region)
         ]
+        roi = frame[top:bottom, left:right]
         best = None
-        for template in self._ios_hero_variants(name, vw):
+        for template in self._ios_hero_variants(name, vw, self._ios_is_tablet):
             h, w = template.shape[:2]
             if roi.shape[0] < h or roi.shape[1] < w:
                 continue
@@ -172,6 +204,8 @@ class IOSLayoutMixin:
         if self.using_ios and name.startswith("heroes/"):
             frame = screenshot if screenshot is not None else self.get_screenshot()
             return self._ios_find_hero(name, frame, threshold)
+        if self.using_ios and self._ios_is_tablet and name not in self._ios_visuals:
+            return None
         if not self.using_ios or name not in self._ios_visuals:
             return super().game_find_template_match(
                 template, match_mode, threshold, grayscale, crop_regions, screenshot
@@ -237,6 +271,7 @@ class IOSLayoutMixin:
             metadata.update(
                 {
                     "category": category,
+                    "visual_profile": "ipad" if self._ios_is_tablet else "iphone",
                     "templates": scores,
                     "note": "Raw visual scores; victory guards still apply during play.",
                 }
@@ -255,8 +290,10 @@ class IOSLayoutMixin:
         if not self.using_ios:
             return super().press_back_button()
         frame = self.get_screenshot()
-        match = self._ios_match("ios/back.png", frame) or self._ios_match(
-            "navigation/resonating_hall_back.png", frame
+        match = (
+            self._ios_match("ios/back.png", frame)
+            or self._ios_match("navigation/resonating_hall_back.png", frame)
+            or self._ios_match("ios/battle_modes_back.png", frame)
         )
         if match is None and self._ios_match("battle/copy.png", frame):
             match = self._ios_match("ios/records_close.png", frame)

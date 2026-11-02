@@ -1,16 +1,23 @@
 # AdbAutoPlayer iOS Support
 
-Experimental Windows USB support for iPhone, based on
+Experimental Windows USB support for iPhone and iPad, based on
 [AdbAutoPlayer/AdbAutoPlayer](https://github.com/AdbAutoPlayer/AdbAutoPlayer).
 The original desktop interface, game settings, and task engine are preserved.
 **Enable iOS** selects the iPhone controller and visual profile; attempts,
 formations, and other game options still come from the existing Game Settings.
 
-**[Download the Windows iOS installer v3 for 12.13.0 (Preview)](https://github.com/Elementalzx14/AdbAutoPlayer-iOS-Support/releases/tag/v12.13.0-ios.3).**
+**[Published Windows iOS installer v3 for 12.13.0 (Preview)](https://github.com/Elementalzx14/AdbAutoPlayer-iOS-Support/releases/tag/v12.13.0-ios.3).**
 Install official AdbAutoPlayer 12.13.0 first, close it, then run this add-on.
+The iPad changes below belong to the v4 source preview and its new installer;
+the published v3 download does not contain the tablet profile.
 iOS dependencies are bundled and use the app's existing Python 3.13. The installer
 preserves game settings and provides backups and restoration. Updating the first
-iOS preview? Choose **Restore previous files** in the v3 installer before installing.
+iOS preview? Choose **Restore previous files** in the v4 installer before installing.
+
+M1 iPad Air on iPadOS 27.2 now has its own visual profile. Ordinary AFK victory and
+Next were tested, along with Season entry, copy, battle, defeat and Retry. Seasonal
+victory, full hero/skin and manual-label coverage, and tablet trials remain unverified.
+Apple developer support loads through the app's Python 3.13; no second runtime is needed.
 
 See the [iOS setup and validation guide](docs/src/user-guide/ios-setup.md) and
 [Windows installer instructions](scripts/windows/ios-installer/README.md).

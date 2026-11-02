@@ -78,6 +78,12 @@ class IOSController:
         with self._lock:
             if self.stop_requested():
                 raise KeyboardInterrupt
+            connecting = self._process is None
+            if connecting:
+                logging.info(
+                    "Preparing Apple USB connection and developer support. "
+                    "First use may download support files."
+                )
             self._connect()
             try:
                 self._process.stdin.write(
@@ -88,7 +94,9 @@ class IOSController:
                 raise AutoPlayerUnrecoverableError(
                     "iOS worker disconnected. Reconnect and unlock the device, then restart the task."
                 ) from exc
-            for _ in range(360):
+            # First-use developer setup can outlast an ordinary screenshot.
+            timeout_seconds = 180 if connecting else 90
+            for _ in range(timeout_seconds * 4):
                 if self.stop_requested():
                     raise KeyboardInterrupt
                 try:
@@ -125,7 +133,13 @@ class IOSController:
                 metadata["canvas_size"],
             )
             ratio = metadata["native_size"][1] / metadata["native_size"][0]
-            if not 2.1 <= ratio <= 2.25:
+            if metadata["model"].startswith("iPad"):
+                logging.warning(
+                    "Experimental iPad visual profile: M1 iPad Air AFK victory/next "
+                    "and Season copy/battle/defeat tested. Other layouts, trials, "
+                    "and seasonal victories still require validation."
+                )
+            elif not 2.1 <= ratio <= 2.25:
                 logging.warning(
                     "This iOS aspect ratio is unverified (iPad/SE layouts require testing). Capture a debug report before automation."
                 )

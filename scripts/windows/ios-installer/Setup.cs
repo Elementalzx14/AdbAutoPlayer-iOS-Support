@@ -15,12 +15,12 @@ class Setup : Form {
     const string Release = "https://github.com/AdbAutoPlayer/AdbAutoPlayer/releases/tag/12.13.0";
 
     Setup() {
-        Text = "AdbAutoPlayer iOS Support - 12.13.0 Setup v3";
+        Text = "AdbAutoPlayer iOS Support - 12.13.0 Setup v4";
         ClientSize = new Size(680, 430); StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false;
         Font = new Font("Segoe UI", 10);
         var title = new Label { Text = "Add iOS support to AdbAutoPlayer 12.13.0", Left = 20, Top = 18, Width = 640, Height = 30, Font = new Font("Segoe UI", 15, FontStyle.Bold) };
-        var info = new Label { Text = "Install the official Windows x64 12.13.0 app first, then close it.\r\nUses the app's Python 3.13 and preserves your game settings.\r\nApple Devices is required for USB. iPad layouts are not yet validated.", Left = 20, Top = 58, Width = 640, Height = 85 };
+        var info = new Label { Text = "Install the official Windows x64 12.13.0 app first, then close it.\r\nUses the app's Python 3.13 and preserves your game settings.\r\nApple Devices is required. M1 iPad Air AFK progression tested on iPadOS 27.2.\r\nOther iPad modes and layouts remain experimental.", Left = 20, Top = 58, Width = 640, Height = 85 };
         var link = new LinkLabel { Text = "Download official AdbAutoPlayer 12.13.0", Left = 20, Top = 146, Width = 430, Height = 25 };
         link.LinkClicked += delegate { Process.Start(Release); };
         folder.SetBounds(20, 183, 535, 28);

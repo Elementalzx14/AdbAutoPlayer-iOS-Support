@@ -1,0 +1,338 @@
+{
+  "ios/world_modes.png": {
+    "file": "world_modes.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.3888888888888889,
+      0.9562419562419563,
+      0.49722222222222223,
+      0.9697554697554698
+    ],
+    "margin_fraction": 0.045
+  },
+  "navigation/resonating_hall_shortcut.png": {
+    "file": "world_modes.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.3888888888888889,
+      0.9562419562419563,
+      0.49722222222222223,
+      0.9697554697554698
+    ],
+    "margin_fraction": 0.045
+  },
+  "battle_modes/afk_stage.png": {
+    "file": "afk_card.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.1388888888888889,
+      0.3384813384813385,
+      0.3435185185185185,
+      0.37065637065637064
+    ],
+    "margin_fraction": 0.045,
+    "search_region": [
+      0.02,
+      0.12,
+      0.45,
+      0.82
+    ]
+  },
+  "ios/battle_modes_back.png": {
+    "file": "battle_modes_back.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.04351851851851852,
+      0.9202059202059202,
+      0.10185185185185185,
+      0.9555984555984556
+    ],
+    "margin_fraction": 0.045
+  },
+  "afk_stages/season_battle.png": {
+    "file": "stage_battle.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.7157407407407408,
+      0.796010296010296,
+      0.8333333333333334,
+      0.8294723294723295
+    ],
+    "margin_fraction": 0.045
+  },
+  "ios/stage_season.png": {
+    "file": "stage_season.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.11666666666666667,
+      0.797940797940798,
+      0.47314814814814815,
+      0.8281853281853282
+    ],
+    "margin_fraction": 0.045
+  },
+  "ios/stage.png": {
+    "file": "stage_title.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.07777777777777778,
+      0.44594594594594594,
+      0.30092592592592593,
+      0.4794079794079794
+    ],
+    "margin_fraction": 0.045
+  },
+  "ios/back.png": {
+    "file": "back.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.04537037037037037,
+      0.898970398970399,
+      0.10925925925925926,
+      0.9356499356499357
+    ],
+    "margin_fraction": 0.045,
+    "search_region": [
+      0.0,
+      0.82,
+      0.17,
+      0.98
+    ]
+  },
+  "navigation/resonating_hall_back.png": {
+    "file": "back.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.04537037037037037,
+      0.898970398970399,
+      0.10925925925925926,
+      0.9356499356499357
+    ],
+    "margin_fraction": 0.045,
+    "search_region": [
+      0.0,
+      0.82,
+      0.17,
+      0.98
+    ]
+  },
+  "battle/records.png": {
+    "file": "records.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.1787037037037037,
+      0.8848133848133848,
+      0.2611111111111111,
+      0.9388674388674388
+    ],
+    "margin_fraction": 0.045
+  },
+  "battle/battle.png": {
+    "file": "battle.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.7527777777777778,
+      0.8951093951093951,
+      0.8870370370370371,
+      0.9272844272844273
+    ],
+    "margin_fraction": 0.045
+  },
+  "battle/copy.png": {
+    "file": "copy.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.5101851851851852,
+      0.8024453024453024,
+      0.6268518518518519,
+      0.8384813384813384
+    ],
+    "margin_fraction": 0.045
+  },
+  "battle/formation_next.png": {
+    "file": "formation_next.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.812962962962963,
+      0.5102960102960103,
+      0.8555555555555555,
+      0.5424710424710425
+    ],
+    "margin_fraction": 0.045,
+    "search_region": [
+      0.76,
+      0.38,
+      0.93,
+      0.63
+    ]
+  },
+  "ios/records_close.png": {
+    "file": "records_close.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.42777777777777776,
+      0.9111969111969112,
+      0.5712962962962963,
+      0.9343629343629344
+    ],
+    "margin_fraction": 0.045
+  },
+  "navigation/confirm.png": {
+    "file": "confirm.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.7046296296296296,
+      0.7252252252252253,
+      0.7833333333333333,
+      0.7728442728442728
+    ],
+    "margin_fraction": 0.045,
+    "search_region": [
+      0.5,
+      0.45,
+      0.95,
+      0.85
+    ]
+  },
+  "cancel.png": {
+    "file": "cancel.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.5416666666666666,
+      0.7271557271557272,
+      0.5981481481481481,
+      0.7676962676962676
+    ],
+    "margin_fraction": 0.045,
+    "search_region": [
+      0.2,
+      0.45,
+      0.7,
+      0.85
+    ]
+  },
+  "ios/victory_rewards.png": {
+    "file": "victory_rewards.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.35,
+      0.6254826254826255,
+      0.6481481481481481,
+      0.6499356499356499
+    ],
+    "margin_fraction": 0.045
+  },
+  "ios/victory_progress.png": {
+    "file": "victory_progress.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.15833333333333333,
+      0.667953667953668,
+      0.4009259259259259,
+      0.6898326898326899
+    ],
+    "margin_fraction": 0.045
+  },
+  "next.png": {
+    "file": "victory_battle.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.6444444444444445,
+      0.9015444015444015,
+      0.7611111111111111,
+      0.9337194337194337
+    ],
+    "margin_fraction": 0.045
+  },
+  "retry.png": {
+    "file": "retry.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.6453703703703704,
+      0.9111969111969112,
+      0.7648148148148148,
+      0.9414414414414415
+    ],
+    "margin_fraction": 0.045
+  }
+}

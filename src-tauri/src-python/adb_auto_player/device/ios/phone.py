@@ -7,8 +7,12 @@ from pathlib import Path
 import pymobiledevice3.common
 
 from pymobiledevice3 import usbmux
+from pymobiledevice3.exceptions import CoreDeviceError
 from pymobiledevice3.lockdown import create_using_usbmux
 from pymobiledevice3.remote.userspace_tunnel import UserspaceRsdTunnel
+from pymobiledevice3.remote.remote_service_discovery import (
+    RemoteServiceDiscoveryService,
+)
 from pymobiledevice3.remote.core_device.app_service import AppServiceService
 from pymobiledevice3.remote.core_device.screen_capture_service import (
     ScreenCaptureService,
@@ -19,9 +23,20 @@ from pymobiledevice3.remote.core_device.hid_service import (
     TOUCHSCREEN_STATE_RELEASE,
 )
 
+REMOTE_CONTROL_UNSUPPORTED_CODE = 9021
+REQUIRED_SERVICES = {
+    "com.apple.coredevice.screencaptureservice",
+    "com.apple.coredevice.displayservice",
+    "com.apple.coredevice.hid.universalhidservice",
+}
+
 
 class DeviceLockedError(RuntimeError):
     """The paired phone is reachable but cannot safely accept game input."""
+
+
+class RemoteControlUnavailableError(RuntimeError):
+    """The device permits capture but its OS refuses remote input."""
 
 
 def normalized_point(x, y, width, height):
@@ -65,6 +80,7 @@ class Phone:
                 await asyncio.wait_for(create_using_usbmux(serial=self.serial), 10)
             )
             await self.ensure_unlocked()
+            await self.ensure_developer_services()
             return self
         except BaseException:
             await self._close_services()
@@ -102,6 +118,57 @@ class Phone:
         """Public device characteristics, without names or pairing identifiers."""
         return {"model": self.rsd.product_type, "ios_version": self.rsd.product_version}
 
+    async def ensure_developer_services(self):
+        """Load Apple developer support when a restart removed its services."""
+        if REQUIRED_SERVICES <= self.rsd.peer_info.get("Services", {}).keys():
+            return
+        if not await self.lockdown.get_developer_mode_status():
+            raise RuntimeError(
+                "Enable Developer Mode in Settings > Privacy & Security on the "
+                "iPhone or iPad, restart it, then confirm Turn On."
+            )
+        try:
+            from pymobiledevice3.services.mobile_image_mounter import auto_mount  # noqa: PLC0415
+        except ImportError as exc:
+            raise RuntimeError(
+                "Apple developer support is unavailable in this installation. "
+                "Install the updated iOS add-on with its Python 3.13 dependencies."
+            ) from exc
+        # Apple support is downloaded on first use and cached locally. This is
+        # developer tooling, not a firmware update, and does not install an app.
+        mount_error = None
+        try:
+            await asyncio.wait_for(auto_mount(self.rsd), timeout=40)
+        except Exception as exc:
+            # A daemon can restart after accepting its image and close the reply
+            # channel. Check the resulting services before reporting failure;
+            # do not blindly repeat installation after an ambiguous response.
+            mount_error = exc
+        original = self.rsd
+        for _ in range(3):
+            fresh = RemoteServiceDiscoveryService(
+                original.service.address,
+                open_connection=original.open_connection,
+                handshake_uuid=original.handshake_uuid,
+            )
+            await asyncio.wait_for(fresh.connect(), timeout=10)
+            if REQUIRED_SERVICES <= fresh.peer_info.get("Services", {}).keys():
+                self.stack.push_async_callback(fresh.close)
+                self.rsd = fresh
+                return
+            await fresh.close()
+            await asyncio.sleep(0.5)
+        if mount_error is not None:
+            raise RuntimeError(
+                "Apple developer support setup failed. Check the computer's "
+                "internet connection, reconnect the unlocked device, and retry. "
+                + str(mount_error)
+            ) from mount_error
+        raise RuntimeError(
+            "Apple developer support loaded but screenshot/input services are "
+            "still unavailable. Reconnect the unlocked device and restart the task."
+        )
+
     async def screenshot(self):
         """Capture a native portrait PNG with a bounded request."""
         await self.ensure_unlocked()
@@ -127,12 +194,8 @@ class Phone:
     async def tap(self, x, y, width, height):
         """Send one bounded touch and always release the contact."""
         x, y = normalized_point(x, y, width, height)
-        await self.ensure_unlocked()
         async with self.lock:
-            if self.hid is None:
-                self.hid = await self.stack.enter_async_context(touch_session(self.rsd))
-                # Additional settling time prevents the first tap being dropped.
-                await asyncio.sleep(0.5)
+            await self.ensure_touch_session()
             try:
                 await asyncio.wait_for(
                     self.hid.send_touchscreen(TOUCHSCREEN_STATE_CONTACT, x, y),
@@ -144,3 +207,26 @@ class Phone:
                     self.hid.send_touchscreen(TOUCHSCREEN_STATE_RELEASE, x, y),
                     timeout=10,
                 )
+
+    async def ensure_touch_session(self):
+        """Open input once and distinguish OS restrictions from USB failures."""
+        await self.ensure_unlocked()
+        if self.hid is not None:
+            return
+        try:
+            self.hid = await self.stack.enter_async_context(touch_session(self.rsd))
+        except CoreDeviceError as exc:
+            if (
+                exc.code != REMOTE_CONTROL_UNSUPPORTED_CODE
+                and "remote control requires" not in str(exc).lower()
+            ):
+                raise
+            info = self.metadata
+            raise RemoteControlUnavailableError(
+                f"Remote input is unavailable on {info['model']} "
+                f"(iOS/iPadOS {info['ios_version']}). {exc} "
+                "Screenshots may work while taps and swipes are blocked. "
+                "Check Settings > General > Software Update on the device."
+            ) from exc
+        # Additional settling time prevents the first tap being dropped.
+        await asyncio.sleep(0.5)

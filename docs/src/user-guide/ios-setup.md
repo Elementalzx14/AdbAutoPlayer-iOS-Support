@@ -1,5 +1,12 @@
 # Integrated iPhone support for AdbAutoPlayer
 
+**iPad source update (2026-11-01):** v4 adds an experimental M1 iPad Air profile
+tested on iPadOS 27.2. Ordinary AFK victory/Next and seasonal copy/battle/defeat
+were tested. Seasonal victory and tablet trials remain unverified. It also loads
+Apple developer support using the app's Python 3.13, including after a device restart.
+Use the v4 installer for this tablet profile; older downloads do not include it.
+See the dated follow-up in [test results](ios-review.md) for exact scope.
+
 **Source update (2026-10-03):** See [maintainer review and test results](ios-review.md)
 for the Python 3.13 integration, uniform layout, diagnostics and current limitations.
 The downloadable `v12.13.0-ios.3` add-on includes these changes and uses the app's

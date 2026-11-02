@@ -26,15 +26,15 @@ jobs:
         run: |
           uv venv --python 3.13 .venv-ios
           uv pip install --python .venv-ios/Scripts/python.exe --override scripts/windows/ios-runtime-overrides.txt './src-tauri[ios]' pytest
-      - name: Import the packaged transport without lzfse
+      - name: Import the packaged transport and developer setup
         shell: pwsh
         run: |
-          .venv-ios/Scripts/python.exe -c "import importlib.util; from adb_auto_player.device.ios.phone import Phone; from adb_auto_player.device.ios.geometry import Canvas; assert importlib.util.find_spec('lzfse') is None"
+          .venv-ios/Scripts/python.exe -c "import lzfse; from pymobiledevice3.services.mobile_image_mounter import auto_mount; from adb_auto_player.device.ios.phone import Phone; from adb_auto_player.device.ios.geometry import Canvas"
       - name: Device and layout regression tests (no phone required)
         shell: pwsh
         run: |
           $env:PYTHONPATH = (Resolve-Path src-tauri/src-python).Path
-          .venv-ios/Scripts/python.exe -m pytest src-tauri/src-python/tests/test_ios_review.py src-tauri/src-python/tests/test_ios_integration.py src-tauri/src-python/tests/games/afk_journey/test_ios_layout.py -q
+          .venv-ios/Scripts/python.exe -m pytest src-tauri/src-python/tests/test_ios_review.py src-tauri/src-python/tests/test_ios_tablet_connection.py src-tauri/src-python/tests/test_ios_integration.py src-tauri/src-python/tests/games/afk_journey/test_ios_layout.py src-tauri/src-python/tests/games/afk_journey/test_ipad_layout.py -q
       - name: Installer recovery and settings preservation
         shell: pwsh
         run: |

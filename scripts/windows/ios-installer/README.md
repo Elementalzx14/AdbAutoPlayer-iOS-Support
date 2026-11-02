@@ -1,7 +1,8 @@
 # Windows iOS Support installer for AdbAutoPlayer 12.13.0
 
 This is an **add-on installer** for the official Windows x64 12.13.0 release.
-Version 3 adds iOS dependencies to the app's existing Python 3.13 runtime.
+Version 4 adds an experimental M1 iPad Air visual profile and automatically loads
+Apple developer support using the app's existing Python 3.13 runtime.
 It does not install a second Python runtime. All add-on files are included for
 offline installation; downloading the base app and Apple drivers requires internet.
 Users do not need Python, a terminal, or a Mac to install the add-on.
@@ -14,11 +15,13 @@ The installer is unsigned; no publisher certificate is included.
 2. Download and install `AdbAutoPlayer_12.13.0_x64-setup.exe` from the
    [official 12.13.0 release](https://github.com/AdbAutoPlayer/AdbAutoPlayer/releases/tag/12.13.0).
 3. Close AdbAutoPlayer and any running tasks.
-4. Run `AdbAutoPlayer-iOS-Support-12.13.0-v3-Setup.exe`. Confirm the app folder
+4. Run `AdbAutoPlayer-iOS-Support-12.13.0-v4-Setup.exe`. Confirm the app folder
    (normally `%LOCALAPPDATA%\AdbAutoPlayer`) and click **Install iOS Support**.
-5. Connect one iPhone by USB, unlock it, and accept **Trust This Computer**.
+5. Connect one iPhone or iPad by USB, unlock it, and accept **Trust This Computer**.
    Open AFK Journey in English, portrait orientation. Keep the phone unlocked.
-6. Open AdbAutoPlayer, select **ADB Settings > iPhone / iOS > Enable iOS**.
+6. Enable Developer Mode in the device's **Settings > Privacy & Security** and
+   confirm after its restart. Open AdbAutoPlayer, select
+   **ADB Settings > iPhone / iPad / iOS > Enable iOS**.
    Leave **iOS Python Path** blank to use the app's runtime. Clear any old custom path.
 7. Customize tasks in the normal **Game Settings**, then start a task.
 
@@ -28,14 +31,20 @@ It does not modify game settings, Apple pairing data, or the original UI executa
 Wireless debugging and Union Campaign from 12.13.0 remain present. Their presence
 does not imply those tasks have been validated on iOS.
 
-Tested phone layout: iPhone 17 Pro Max, iOS 27, English portrait. Other devices,
-especially iPads, still require layout testing. An upstream app update may replace
+Tested phone layout: iPhone 17 Pro Max, iOS 27, English portrait. Tablet validation:
+M1 iPad Air, iPadOS 27.2, English portrait, 1640 x 2360. Ordinary AFK victory and
+Next passed; Season selection, copy, battle, defeat and Retry passed. Seasonal
+victory, manual formation labels, full hero/skin matching, Dura, Legend and other
+tablet modes remain unverified. Other iPads still need real-device tests.
+On iPadOS 18.0.1 this iPad allowed screenshots but Apple's input service required
+27.0 or later. First-use developer support needs internet and is cached locally.
+An upstream app update may replace
 the iOS add-on; do not assume this installer works on a different version.
 
 ## Updating the first iOS installer
 
-Close AdbAutoPlayer. Run this v3 installer and choose **Restore previous files**
-first, then **Install iOS Support**. The v3 installer understands the original
+Close AdbAutoPlayer. Run this v4 installer and choose **Restore previous files**
+first, then **Install iOS Support**. The v4 installer understands the original
 preview's backup format. Your game settings are preserved. If the app itself was
 updated or its original backups were removed, install a clean official 12.13.0 copy
 and apply the add-on there instead.
@@ -47,7 +56,7 @@ app was installed over an earlier manual iOS setup. These files do not have an
 installer marker. Run **Install iOS Support** directly: identical payload files and
 known early iOS additions are recognized, backed up, and replaced. Restore returns
 the exact previous files. Unknown changes are still rejected before installation.
-The game backend and dependencies are otherwise identical to the v2 installer.
+Version 4 retains this compatibility fix and adds tablet recognition and developer setup.
 
 ## Restore
 
@@ -67,9 +76,10 @@ installer), `--prepared` (a copy with the iOS dependencies installed), `--bootst
 
 Keep the stock input unmodified. In the prepared copy, install `pymobiledevice3==11.19.4`
 with uv, using `scripts/windows/ios-runtime-overrides.txt` and constraints pinning
-every dependency already shipped in stock. The override excludes `lzfse`; the
-tested CoreDevice screenshot/HID path does not need it. Firmware and DDI operations
-are outside this add-on's scope. The build compares the fork with tag `12.13.0`,
+every dependency already shipped in stock. The override pins `lzfse==0.4.2.post1`,
+which provides a Python 3.13 Windows x64 wheel and permits developer-image setup
+without a compiler. Firmware restore operations remain outside this add-on's scope.
+The build compares the fork with tag `12.13.0`,
 includes changed backend files and additional dependencies, and records hashes of
 the official executables and every replaced file.
 

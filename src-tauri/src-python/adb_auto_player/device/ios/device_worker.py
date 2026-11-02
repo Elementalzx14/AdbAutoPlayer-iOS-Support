@@ -28,6 +28,8 @@ def device_error(exc):
     """Keep actionable connection failures distinct from template failures."""
     detail = f"{type(exc).__name__}: {exc}"
     lower = detail.lower()
+    if type(exc).__name__ == "RemoteControlUnavailableError":
+        return str(exc)
     if "connect exactly one" in lower:
         return "iPhone disconnected or multiple devices connected. Connect exactly one iPhone by USB, unlock it, then restart the task."
     if isinstance(exc, ValueError):
@@ -56,7 +58,6 @@ async def serve(args):
     from ios_transport.usb_lock import exclusive_run
     from pymobiledevice3.remote.core_device.app_service import AppServiceService
     from pymobiledevice3.remote.core_device.hid_service import (
-        touch_session,
         TOUCHSCREEN_STATE_CONTACT,
         TOUCHSCREEN_STATE_RELEASE,
     )
@@ -113,12 +114,7 @@ async def serve(args):
                 return canvas.native_point(x, y)
 
             async def drag(request):
-                await phone.ensure_unlocked()
-                if phone.hid is None:
-                    phone.hid = await phone.stack.enter_async_context(
-                        touch_session(phone.rsd)
-                    )
-                    await asyncio.sleep(0.5)
+                await phone.ensure_touch_session()
                 duration = float(request["duration"])
                 if not 0 < duration <= 30:
                     raise ValueError(

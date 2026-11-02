@@ -65,3 +65,5 @@ ios-runtime/
 device-cache/
 ios-runs/
 /src-tauri/src-python/adb_auto_player/device/ios/templates/
+# Local tablet captures are not public test fixtures; use synthetic canvases.
+/src-tauri/src-python/tests/games/afk_journey/data/ipad/
