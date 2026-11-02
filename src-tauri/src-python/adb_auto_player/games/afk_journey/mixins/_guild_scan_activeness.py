@@ -7,7 +7,7 @@ from difflib import SequenceMatcher
 from time import sleep
 
 from adb_auto_player.file_loader import SettingsLoader
-from adb_auto_player.models.geometry import Point
+from adb_auto_player.models.geometry import ReferencePoint
 from adb_auto_player.ocr import OCRBackend, RapidOCRBackend
 from adb_auto_player.ocr.qwen2vl_backend import QwenVLOCRBackend
 
@@ -76,9 +76,9 @@ class _GuildScanActivenessMixin(_GuildScanRankingsMixin):
             return False
 
         logging.info("Swiping to reveal Members button...")
-        self.device.swipe(
-            Point(self._GUILD_SWIPE_SX, self._GUILD_SWIPE_SY),
-            Point(self._GUILD_SWIPE_EX, self._GUILD_SWIPE_EY),
+        self.swipe(
+            ReferencePoint(self._GUILD_SWIPE_SX, self._GUILD_SWIPE_SY),
+            ReferencePoint(self._GUILD_SWIPE_EX, self._GUILD_SWIPE_EY),
             duration=0.6,
         )
         sleep(1.5)
@@ -102,9 +102,9 @@ class _GuildScanActivenessMixin(_GuildScanRankingsMixin):
 
             if attempt < self._GUILD_NAV_SWIPE_MAX_ATTEMPTS:
                 logging.warning("Members button not found, swiping again to reveal it.")
-                self.device.swipe(
-                    Point(self._GUILD_SWIPE_SX, self._GUILD_SWIPE_SY),
-                    Point(self._GUILD_SWIPE_EX, self._GUILD_SWIPE_EY),
+                self.swipe(
+                    ReferencePoint(self._GUILD_SWIPE_SX, self._GUILD_SWIPE_SY),
+                    ReferencePoint(self._GUILD_SWIPE_EX, self._GUILD_SWIPE_EY),
                     duration=0.6,
                 )
                 sleep(1.5)
@@ -649,7 +649,7 @@ class _GuildScanActivenessMixin(_GuildScanRankingsMixin):
                 )
                 break
 
-            self.swipe_up(x=540, sy=1400, ey=1100, duration=1.5)
+            self.swipe_up(x=540, sy=1400, ey=1100, duration=1.5, reference=True)
             sleep(2.0)
 
         return contributions
@@ -769,7 +769,7 @@ class _GuildScanActivenessMixin(_GuildScanRankingsMixin):
                 )
                 break
 
-            self.swipe_up(x=540, sy=1400, ey=800, duration=1.0)
+            self.swipe_up(x=540, sy=1400, ey=800, duration=1.0, reference=True)
             sleep(2)
 
         return records

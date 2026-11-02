@@ -159,7 +159,7 @@ class TitanReaverProxyBattleMixin(AFKJourneyBase):
 
         if banner is None:
             logging.info("No proxy battle banner found, swiping down to check for more")
-            self.swipe_down(1000, 800, 1500)
+            self.swipe_down(1000, 800, 1500, reference=True)
             return None
 
         return Point(banner.x, banner.y)
@@ -176,11 +176,11 @@ class TitanReaverProxyBattleMixin(AFKJourneyBase):
         logging.info("Found proxy battle banner, attempting to join")
 
         # Calculate click position
-        click_point = Point(
-            banner_location.x
-            + TitanReaverProxyBattleConstants.PROXY_BATTLE_BANNER_OFFSET_X,
-            banner_location.y
-            + TitanReaverProxyBattleConstants.PROXY_BATTLE_BANNER_OFFSET_Y,
+        click_point = self.layout.offset_point(
+            self,
+            banner_location,
+            dx=TitanReaverProxyBattleConstants.PROXY_BATTLE_BANNER_OFFSET_X,
+            dy=TitanReaverProxyBattleConstants.PROXY_BATTLE_BANNER_OFFSET_Y,
         )
 
         self.tap(click_point)

@@ -15,7 +15,7 @@ from adb_auto_player.games.afk_journey.base import AFKJourneyBase
 from adb_auto_player.games.afk_journey.gui_category import AFKJCategory
 from adb_auto_player.models import ConfidenceValue
 from adb_auto_player.models.decorators import GUIMetadata
-from adb_auto_player.models.geometry import Coordinates, Point
+from adb_auto_player.models.geometry import Coordinates
 from adb_auto_player.models.image_manipulation import CropRegions
 from adb_auto_player.models.template_matching import MatchMode
 
@@ -232,7 +232,7 @@ class ArcaneLabyrinthMixin(AFKJourneyBase, ABC):
             ):
                 if self.arcane_tap_to_close_point is not None:
                     self.tap(self.arcane_tap_to_close_point)
-                self.tap(Point(result.x, result.y + 500))
+                self.tap(self.layout.offset_point(self, result, dy=500))
             case (
                 "arcane_labyrinth/shop_button.png"
                 | "arcane_labyrinth/crest_crystal_ball.png"

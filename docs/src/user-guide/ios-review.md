@@ -1,5 +1,11 @@
 # iOS maintainer review — 2026-10-03
 
+> This is the historical October review. Current 12.13.7 iPad layout/video work
+> and its unfinished mode validation are tracked in the
+> [Apple mode validation report](ios-mode-validation.md). The current runtime
+> uses the official `lzfse==0.4.2.post1` Windows wheel; the old exclusion described
+> below no longer applies to current source.
+
 This branch builds on upstream 12.13.0 and retains the original game menu and settings.
 The `v12.13.0-ios.3` add-on installer includes this review and uses the app's existing
 Python 3.13. The older `v12.13.0-ios.1` installer remains available for reference.

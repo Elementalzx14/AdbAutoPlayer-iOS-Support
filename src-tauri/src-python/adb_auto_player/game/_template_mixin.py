@@ -8,8 +8,9 @@ from time import monotonic, sleep
 from typing import Literal, TypeVar
 
 import numpy as np
+
 from adb_auto_player.exceptions import GameActionFailedError, GameTimeoutError
-from adb_auto_player.image_manipulation import IO, Color, Cropping
+from adb_auto_player.image_manipulation import IO, Cropping
 from adb_auto_player.models import ConfidenceValue
 from adb_auto_player.models.geometry import Coordinates, Point
 from adb_auto_player.models.image_manipulation import CropRegions
@@ -247,26 +248,16 @@ class _TemplateMixin(_GameBase):
         """
         screenshot = screenshot if screenshot is not None else self.get_screenshot()
 
-        offset = None
-        if crop_regions:
-            cropped = Cropping.crop(screenshot, crop_regions)
-            screenshot = cropped.image
-            offset = cropped.offset
-
-        if grayscale:
-            screenshot = Color.to_grayscale(screenshot)
-
         for template in templates:
             result = self.game_find_template_match(
                 template,
                 match_mode=match_mode,
                 threshold=threshold or self.default_threshold,
                 screenshot=screenshot,
+                crop_regions=crop_regions,
                 grayscale=grayscale,
             )
             if result is not None:
-                if offset:
-                    return result.with_offset(offset)
                 return result
         return None
 

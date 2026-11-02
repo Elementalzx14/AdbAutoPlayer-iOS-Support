@@ -40,6 +40,9 @@ _GETPROP_BOOL_PROP_PATTERN = r"\[{}\]:\s*\[([^\]]*)\]"
 class AdbController:
     """Functions to control an ADB device."""
 
+    supports_offscreen_taps = True
+    realtime_capture_ready = True
+
     d: AdbDeviceWrapper
 
     def __init__(self):

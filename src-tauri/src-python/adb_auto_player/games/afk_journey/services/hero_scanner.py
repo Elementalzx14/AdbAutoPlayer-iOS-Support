@@ -20,10 +20,11 @@ from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
-from adb_auto_player.file_loader.settings_loader import SettingsLoader
-from adb_auto_player.models.geometry import Point
-from adb_auto_player.ocr import RapidOCRBackend
 from rapidocr import RapidOCR
+
+from adb_auto_player.file_loader.settings_loader import SettingsLoader
+from adb_auto_player.models.geometry import ReferencePoint
+from adb_auto_player.ocr import RapidOCRBackend
 
 if TYPE_CHECKING:
     from adb_auto_player.games.afk_journey.base import AFKJourneyBase
@@ -156,7 +157,7 @@ class HeroScanner:
         global_ascend_available = False
         paragons_unlocked_confirmed = False
 
-        first_hero_point = Point(130, 1050)
+        first_hero_point = ReferencePoint(130, 1050)
         self._game.tap(first_hero_point)
         self._game.sleep_navigation()
         time.sleep(2)
@@ -226,12 +227,12 @@ class HeroScanner:
 
                 heroes_scanned += 1
 
-                next_arrow = Point(1045, 1080)
+                next_arrow = ReferencePoint(1045, 1080)
                 self._game.tap(next_arrow)
                 self._game.sleep_navigation()
             except Exception as e:
                 logger.error(f"Error during scan at hero #{heroes_scanned + 1}: {e}")
-                next_arrow = Point(1045, 1080)
+                next_arrow = ReferencePoint(1045, 1080)
                 self._game.tap(next_arrow)
                 self._game.sleep_navigation()
                 heroes_scanned += 1
@@ -537,7 +538,7 @@ class HeroScanner:
         Returns:
             The detected ascension rank string or 'Paragon Locked'.
         """
-        self._game.tap(Point(COORD_BTN_ASCEND[0], COORD_BTN_ASCEND[1]))
+        self._game.tap(ReferencePoint(*COORD_BTN_ASCEND))
         self._game.sleep_action()
 
         full_ss = self._game.get_screenshot()
@@ -546,9 +547,9 @@ class HeroScanner:
         tooltip_text = self._ocr_text_rapid(tooltip_crop).lower()
         if "requirements" in tooltip_text or "unlock" in tooltip_text:
             logger.debug("Detected Ascend lock tooltip!")
-            self._game.tap(Point(540, 400))
+            self._game.tap(ReferencePoint(540, 400))
             self._game.sleep_action()
-            self._game.tap(Point(COORD_BTN_BACK_PANEL[0], COORD_BTN_BACK_PANEL[1]))
+            self._game.tap(ReferencePoint(*COORD_BTN_BACK_PANEL))
             self._game.sleep_action()
             return "Paragon Locked"
 
@@ -565,7 +566,7 @@ class HeroScanner:
         )
         stats_text = self._ocr_text_rapid(scaled_stats).upper()
 
-        self._game.tap(Point(COORD_BTN_BACK_PANEL[0], COORD_BTN_BACK_PANEL[1]))
+        self._game.tap(ReferencePoint(*COORD_BTN_BACK_PANEL))
         self._game.sleep_action()
 
         if not full_line_text:

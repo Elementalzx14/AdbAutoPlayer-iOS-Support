@@ -164,7 +164,7 @@ def test_season_next_requires_both_victory_markers(game, missing):
     game.battle_state.mode = Mode.SEASON_AFK_STAGES
     x1, y1, x2, y2 = [
         round(v * (1080 if i % 2 == 0 else 1920))
-        for i, v in enumerate(game._ios_visuals[missing][0]["region"])
+        for i, v in enumerate(game.layout.matcher._ios_visuals[missing][0]["region"])
     ]
     frame[y1:y2, x1:x2] = 0
     assert game.game_find_template_match("next.png", screenshot=frame) is None
@@ -207,7 +207,7 @@ def test_manual_label_on_an_unselected_record_is_ignored(game):
         is None
     )
     # Move the observed label into the active tab to exercise the positive case.
-    _, marker = game._ios_visuals["battle/manual_battle.png"]
+    _, marker = game.layout.matcher._ios_visuals["battle/manual_battle.png"]
     h, w = marker.shape[:2]
     frame[489 : 489 + h, 185 : 185 + w] = marker
     assert game.game_find_template_match("battle/manual_battle.png", screenshot=frame)

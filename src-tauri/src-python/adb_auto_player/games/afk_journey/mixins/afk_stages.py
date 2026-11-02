@@ -8,7 +8,7 @@ from adb_auto_player.exceptions import (
     GameTimeoutError,
 )
 from adb_auto_player.models.decorators import GUIMetadata
-from adb_auto_player.models.geometry import Point
+from adb_auto_player.models.geometry import Point, ReferencePoint
 from adb_auto_player.models.image_manipulation import CropRegions
 from adb_auto_player.util import SummaryGenerator
 
@@ -100,7 +100,7 @@ class AFKStagesMixin(AFKJourneyBase):
                     "using static coordinates for Season AFK Stages."
                 )
                 self.tap(
-                    Point(x=300, y=1610),
+                    ReferencePoint(x=300, y=1610),
                     log_message="Clicking Season AFK Stages button (fallback)",
                 )
         else:
@@ -116,7 +116,7 @@ class AFKStagesMixin(AFKJourneyBase):
                     "Template not found, using static coordinates for Battle button."
                 )
                 self.tap(
-                    Point(x=800, y=1610),
+                    ReferencePoint(x=800, y=1610),
                     log_message="Clicking Battle button (fallback)",
                 )
         self.sleep_navigation()

@@ -10,6 +10,9 @@ from adb_auto_player.models.geometry import Coordinates
 class DeviceController(Protocol):
     """Transport-independent contract consumed by the game engine."""
 
+    supports_offscreen_taps: bool
+    realtime_capture_ready: bool
+
     @property
     def identifier(self) -> str:
         """Human-readable device identifier."""

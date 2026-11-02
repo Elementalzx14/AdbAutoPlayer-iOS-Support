@@ -8,7 +8,7 @@ from adb_auto_player.exceptions import GameTimeoutError
 from adb_auto_player.games.afk_journey.base import AFKJourneyBase
 from adb_auto_player.games.afk_journey.gui_category import AFKJCategory
 from adb_auto_player.models.decorators import GUIMetadata
-from adb_auto_player.models.geometry import Box, Point
+from adb_auto_player.models.geometry import Box, ReferencePoint
 from adb_auto_player.models.image_manipulation import CropRegions
 from adb_auto_player.models.template_matching import TemplateMatchResult
 
@@ -98,7 +98,7 @@ class AssistMixin(AFKJourneyBase):
                 is None
             ):
                 # Back button does not always close profile/chat windows
-                self.tap(Point(550, 100))
+                self.tap(ReferencePoint(550, 100))
                 sleep(1)
             return False
         self.tap(result)
@@ -156,7 +156,7 @@ class AssistMixin(AFKJourneyBase):
 
         # click first 5 heroes in row 1 and 2
         for x in [110, 290, 470, 630, 800]:
-            self.tap(Point(x, 1300))
+            self.tap(ReferencePoint(x, 1300))
             sleep(0.5)
         while True:
             cc_ready = self.game_find_template_match(
@@ -185,8 +185,8 @@ class AssistMixin(AFKJourneyBase):
             return False
         self.tap(go)
         sleep(3)
-        self.tap(Point(130, 900))
+        self.tap(ReferencePoint(130, 900))
         sleep(1)
-        self.tap(Point(630, 1800))
+        self.tap(ReferencePoint(630, 1800))
         logging.info("Synergy complete")
         return True

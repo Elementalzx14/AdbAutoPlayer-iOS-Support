@@ -8,6 +8,7 @@
 - [Wireless Debugging (Wi-Fi)](user-guide/wireless-debugging.md)
 - [Windows Setup Guide](user-guide/windows-setup.md)
 - [iPhone Setup (Experimental)](user-guide/ios-setup.md)
+- [Apple Mode Validation](user-guide/ios-mode-validation.md)
 - [macOS Setup Guide](user-guide/macos-setup.md)
 - [Linux Setup Guide](user-guide/linux-setup.md)
 - [Troubleshooting](user-guide/troubleshoot.md)

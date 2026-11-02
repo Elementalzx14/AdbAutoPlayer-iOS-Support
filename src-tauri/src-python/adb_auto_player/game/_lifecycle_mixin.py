@@ -3,7 +3,11 @@
 import logging
 from time import perf_counter
 
-from adb_auto_player.exceptions import GameNotRunningOrFrozenError, GameStartError
+from adb_auto_player.exceptions import (
+    AutoPlayerWarningError,
+    GameNotRunningOrFrozenError,
+    GameStartError,
+)
 from adb_auto_player.models.geometry import PointOutsideDisplay
 
 from ._base import _GameBase
@@ -21,6 +25,7 @@ class _LifecycleMixin(_GameBase):
         Args:
             device_streaming (bool, optional): Whether to start the H264 stream.
         """
+        self._realtime_capture_required = False
         self._set_device_resolution()
         self._check_requirements()
 
@@ -112,6 +117,12 @@ class _LifecycleMixin(_GameBase):
         """
         start_time = perf_counter()
         _ = self.get_screenshot()
+        if not self.device.realtime_capture_ready:
+            raise AutoPlayerWarningError(
+                "This reaction-based task needs video capture. The device is using "
+                "slower screenshots; check the capture warning before retrying."
+            )
+        self._realtime_capture_required = True
         total_time = (perf_counter() - start_time) * 1000
         if total_time > max_frame_delay:
             logging.warning(
@@ -120,6 +131,13 @@ class _LifecycleMixin(_GameBase):
             )
         else:
             logging.info(f"Screenshot/Frame delay: {int(total_time)} ms")
+
+        if not self.device.supports_offscreen_taps:
+            logging.info(
+                "Input benchmark skipped: this device rejects off-screen taps. "
+                "Input latency has not been measured."
+            )
+            return
 
         total_time = 0.0
         iterations = 10

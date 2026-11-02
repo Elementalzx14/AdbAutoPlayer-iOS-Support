@@ -6,7 +6,7 @@ from adb_auto_player.decorators import register_command
 from adb_auto_player.image_manipulation import Cropping, Scaling
 from adb_auto_player.models import ConfidenceValue
 from adb_auto_player.models.decorators import GUIMetadata
-from adb_auto_player.models.geometry import Box, Point
+from adb_auto_player.models.geometry import Box, ReferencePoint
 from adb_auto_player.models.image_manipulation import CropRegions
 from adb_auto_player.template_matching import TemplateMatcher
 
@@ -14,13 +14,13 @@ from ..base import AFKJourneyBase
 from ..gui_category import AFKJCategory
 
 MATCH_TARGET_BOX = Box(
-    top_left=Point(80, 160),
+    top_left=ReferencePoint(80, 160),
     width=80,
     height=100,
 )
 
 MATCH_AREA_BOX = Box(
-    top_left=Point(150, 440),
+    top_left=ReferencePoint(150, 440),
     width=770,
     height=1180,
 )
@@ -65,14 +65,17 @@ class MatchingCards(AFKJourneyBase):
             timeout_message="Not in game window",
             threshold=ConfidenceValue("95%"),
         )
-        crop_result = Cropping.crop_to_box(self.get_screenshot(), MATCH_TARGET_BOX)
+        crop_result = Cropping.crop_to_box(
+            self.get_screenshot(),
+            self.layout.resolve_box(self, MATCH_TARGET_BOX),
+        )
         targets = [
             Scaling.scale_percent(crop_result.image, target_scale)
             for target_scale in MATCH_TARGET_SCALES
         ]
         logging.info("Starting Matching Cards ...")
         self.tap(
-            Point(int(1080 / 2), int(1920 / 2)),
+            ReferencePoint(1080 // 2, 1920 // 2),
             log=False,
         )
         sleep(3)
@@ -85,7 +88,7 @@ class MatchingCards(AFKJourneyBase):
         while time.monotonic() - start_time < sixty_seconds:
             cropped = Cropping.crop_to_box(
                 self.get_screenshot(),
-                MATCH_AREA_BOX,
+                self.layout.resolve_box(self, MATCH_AREA_BOX),
             )
 
             for target in targets:

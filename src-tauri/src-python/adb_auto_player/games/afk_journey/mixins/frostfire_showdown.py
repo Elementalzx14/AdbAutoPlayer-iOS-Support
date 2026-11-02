@@ -9,7 +9,7 @@ from adb_auto_player.games.afk_journey.base import AFKJourneyBase
 from adb_auto_player.games.afk_journey.gui_category import AFKJCategory
 from adb_auto_player.models import ConfidenceValue
 from adb_auto_player.models.decorators import GUIMetadata
-from adb_auto_player.models.geometry import Point
+from adb_auto_player.models.geometry import ReferencePoint
 from adb_auto_player.models.image_manipulation import CropRegions
 from adb_auto_player.models.template_matching import TemplateMatchResult
 
@@ -49,7 +49,7 @@ class FrostfireShowdownMixin(AFKJourneyBase, ABC):
                 "[Difficulty Detection] Detected Frostfire difficulty (non-active). "
                 "Navigating to Epic difficulty..."
             )
-            self.tap(Point(220, 1505))  # Navigate to Epic difficulty
+            self.tap(ReferencePoint(220, 1505))  # Navigate to Epic difficulty
             sleep(2)  # Wait for UI to update
             logging.info("[Difficulty Detection] Navigated to Epic difficulty")
 
@@ -132,7 +132,7 @@ class FrostfireShowdownMixin(AFKJourneyBase, ABC):
             ]
         )
         self.wait_for_template(template="event/frostfire_showdown/title_s")
-        self.tap(Point(650, 1450))  # Join
+        self.tap(ReferencePoint(650, 1450))  # Join
         sleep(3)
 
         # Detect difficulty level
@@ -142,7 +142,7 @@ class FrostfireShowdownMixin(AFKJourneyBase, ABC):
         self._max_retries = max_retries
 
         self.wait_for_template(template="event/frostfire_showdown/title_s")
-        self.tap(Point(800, 1800))  # Start/Continue
+        self.tap(ReferencePoint(800, 1800))  # Start/Continue
         sleep(4)
         if self.game_find_template_match(
             template="event/frostfire_showdown/insufficient_resources"
@@ -154,7 +154,7 @@ class FrostfireShowdownMixin(AFKJourneyBase, ABC):
     def _handle_battle(self) -> bool:
         # Enter hero selection screen
         self.wait_for_template(template="event/frostfire_showdown/quick_select")
-        self.tap(Point(800, 1800))  # Continue/Battle
+        self.tap(ReferencePoint(800, 1800))  # Continue/Battle
         sleep(2)
         self._tap_till_template_disappears(template="navigation/confirm")  # consumables
         sleep(4)
@@ -162,11 +162,11 @@ class FrostfireShowdownMixin(AFKJourneyBase, ABC):
         # Clear all hero spots
         self.wait_for_template(template="start_battle")
         logging.debug("Clearing heroes")
-        self.tap(Point(425, 950))
+        self.tap(ReferencePoint(425, 950))
         sleep(1)
-        self.tap(Point(325, 870))
+        self.tap(ReferencePoint(325, 870))
         sleep(1)
-        self.tap(Point(175, 870))
+        self.tap(ReferencePoint(175, 870))
         sleep(1)
 
         # Select 3 new ones from list of heroes (excluding previously failed heroes)
@@ -230,7 +230,7 @@ class FrostfireShowdownMixin(AFKJourneyBase, ABC):
             f"[Stamina Check] No stamina indicator found for {hero_name} "
             "after 3 attempts - may be off screen"
         )
-        self.swipe_up(400, 1630, 1560, duration=1)
+        self.swipe_up(400, 1630, 1560, duration=1, reference=True)
         sleep(1)
         return None
 
@@ -437,7 +437,7 @@ class FrostfireShowdownMixin(AFKJourneyBase, ABC):
                     f"[Hero Selection] No listed hero found on screen, "
                     f"scrolling down ({scrolls}/{max_scrolls})"
                 )
-                self.swipe_up(400, 1630, 1485, duration=1)
+                self.swipe_up(400, 1630, 1485, duration=1, reference=True)
                 sleep(2)
                 scrolls += 1
 
@@ -446,10 +446,10 @@ class FrostfireShowdownMixin(AFKJourneyBase, ABC):
                     f"[Hero Selection] Max scrolls reached! Only selected "
                     f"{selected_heroes}/{hero_slots} heroes. Resetting selection..."
                 )
-                self.tap(Point(1000, 1625))
-                self.tap(Point(715, 1600))
-                self.tap(Point(850, 1600))
-                self.tap(Point(1000, 1450))
+                self.tap(ReferencePoint(1000, 1625))
+                self.tap(ReferencePoint(715, 1600))
+                self.tap(ReferencePoint(850, 1600))
+                self.tap(ReferencePoint(1000, 1450))
                 logging.info("[Hero Selection] Hero selection reset")
                 return
 
@@ -531,13 +531,13 @@ class FrostfireShowdownMixin(AFKJourneyBase, ABC):
                 logging.info("Victory!")
                 # Reset failed heroes on victory so next battle can use whole hero pool
                 self._failed_hero_teams = []
-                self.tap(Point(550, 1800))  # Tap to Close
+                self.tap(ReferencePoint(550, 1800))  # Tap to Close
                 sleep(5)
                 # If we won the final clear Battle Record and use next token
                 if self.game_find_template_match(
                     template="event/frostfire_showdown/battle_record"
                 ):
-                    self.tap(Point(550, 1800))  # Tap Battle Record
+                    self.tap(ReferencePoint(550, 1800))  # Tap Battle Record
                     sleep(5)
                     self.wait_for_template(template="event/frostfire_showdown/title_s")
 
@@ -550,7 +550,7 @@ class FrostfireShowdownMixin(AFKJourneyBase, ABC):
                     self._max_retries = max_retries
                     sleep(1)
 
-                    self.tap(Point(800, 1800))  # Start/Continue
+                    self.tap(ReferencePoint(800, 1800))  # Start/Continue
                     if self.game_find_template_match(
                         template="event/frostfire_showdown/insufficient_resources"
                     ):
@@ -576,7 +576,7 @@ class FrostfireShowdownMixin(AFKJourneyBase, ABC):
                         f"{', '.join(failed_names)}"
                     )
 
-                self.tap(Point(550, 1800))  # Tap to Close
+                self.tap(ReferencePoint(550, 1800))  # Tap to Close
                 sleep(5)
 
                 # Retry with same token based on difficulty's max retries
@@ -588,9 +588,9 @@ class FrostfireShowdownMixin(AFKJourneyBase, ABC):
 
                 # After max retries, view battle record and use a new token
                 logging.info("Max retries reached, using a new token...")
-                self.tap(Point(100, 1800))  # Tap back button on defeat screen
+                self.tap(ReferencePoint(100, 1800))  # Tap back button on defeat screen
                 sleep(3)
-                self.tap(Point(550, 1800))  # Tap Battle Record
+                self.tap(ReferencePoint(550, 1800))  # Tap Battle Record
                 sleep(5)
                 # Use another token
                 self.wait_for_template(template="event/frostfire_showdown/title_s")
@@ -600,7 +600,7 @@ class FrostfireShowdownMixin(AFKJourneyBase, ABC):
                 self._max_stamina = max_stamina
                 self._max_retries = max_retries
                 sleep(1)
-                self.tap(Point(800, 1800))  # Start/Continue
+                self.tap(ReferencePoint(800, 1800))  # Start/Continue
                 sleep(4)
                 if self.game_find_template_match(
                     template="event/frostfire_showdown/insufficient_resources"

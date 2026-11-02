@@ -6,8 +6,8 @@ Coordinates use the same logical canvas and inverse touch mapping as IOSControll
 
 import json
 import logging
-from datetime import datetime, timezone
 from dataclasses import replace
+from datetime import datetime, timezone
 from functools import cached_property, lru_cache
 from pathlib import Path
 
@@ -17,23 +17,20 @@ import numpy as np
 from adb_auto_player.exceptions import GameActionFailedError
 from adb_auto_player.file_loader import SettingsLoader
 from adb_auto_player.models import ConfidenceValue
-from adb_auto_player.models.geometry import Box, Point
+from adb_auto_player.models.geometry import Box, Point, ReferencePoint
 from adb_auto_player.models.image_manipulation import CropRegions
 from adb_auto_player.models.template_matching import MatchMode, TemplateMatchResult
 
 from .battle_state import Mode
+from .scaled_templates import ScaledTemplates
 
 
-class IOSLayoutMixin:
-    @property
-    def using_ios(self):
-        return SettingsLoader.adb_settings().ios.enabled
+class AppleTemplateMatcher:
+    """Image recognition and navigation for one Apple game session."""
 
-    @cached_property
-    def layout(self):
-        from .layout import AppleLayout, AndroidLayout
-
-        return AppleLayout() if self.using_ios else AndroidLayout()
+    def __init__(self, game):
+        self.game = game
+        self.shared_templates = ScaledTemplates(game)
 
     @property
     def _ios_visuals(self):
@@ -51,9 +48,9 @@ class IOSLayoutMixin:
 
     @property
     def _ios_is_tablet(self):
-        return str(getattr(self.device, "metadata", {}).get("model", "")).startswith(
-            "iPad"
-        )
+        return str(
+            getattr(self.game.device, "metadata", {}).get("model", "")
+        ).startswith("iPad")
 
     @staticmethod
     def _load_ios_visuals(folder):
@@ -65,7 +62,7 @@ class IOSLayoutMixin:
 
     def _ios_viewport(self, frame):
         """Use actual image bounds, excluding the transport's letterbox bars."""
-        metadata = getattr(self.device, "metadata", {})
+        metadata = getattr(self.game.device, "metadata", {})
         return metadata.get("viewport", (0, 0, frame.shape[1], frame.shape[0]))
 
     def _ios_match(self, name, frame, threshold=None, diagnostics=None):
@@ -138,13 +135,18 @@ class IOSLayoutMixin:
         x, y = point
         if np.abs(roi[y : y + h, x : x + w].astype(float) - template).mean() > 28:
             return None  # reject controls dimmed by a blocking popup
+        if any(
+            self._ios_match(required, frame) is None
+            for required in spec.get("requires", [])
+        ):
+            return None
         return TemplateMatchResult(
             name, ConfidenceValue(score), Box(Point(left + x, top + y), w, h)
         )
 
     @lru_cache(maxsize=128)
     def _ios_hero_variants(self, name, vw, tablet=False):
-        image = self._load_image(name)
+        image = self.game._load_image(name)
         scales = np.arange(0.65, 1.36, 0.025) if tablet else np.arange(1.3, 1.61, 0.025)
         # The uniform canvas preserves the original hero icon aspect ratio.
         return [
@@ -180,7 +182,7 @@ class IOSLayoutMixin:
                 cv2.matchTemplate(roi, template, cv2.TM_CCOEFF_NORMED)
             )
             if not np.isfinite(score) or score < float(
-                threshold or self.default_threshold
+                threshold or self.game.default_threshold
             ):
                 continue
             if np.abs(roi[y : y + h, x : x + w].astype(float) - template).mean() > 35:
@@ -191,7 +193,7 @@ class IOSLayoutMixin:
                 )
         return best
 
-    def game_find_template_match(
+    def match(
         self,
         template,
         match_mode=MatchMode.BEST,
@@ -201,16 +203,33 @@ class IOSLayoutMixin:
         screenshot=None,
     ):
         name = str(template)
-        if self.using_ios and name.startswith("heroes/"):
-            frame = screenshot if screenshot is not None else self.get_screenshot()
-            return self._ios_find_hero(name, frame, threshold)
-        if self.using_ios and self._ios_is_tablet and name not in self._ios_visuals:
-            return None
-        if not self.using_ios or name not in self._ios_visuals:
-            return super().game_find_template_match(
-                template, match_mode, threshold, grayscale, crop_regions, screenshot
+        if not Path(name).suffix and name + ".png" in self._ios_visuals:
+            result = self.match(
+                name + ".png",
+                match_mode,
+                threshold,
+                grayscale,
+                crop_regions,
+                screenshot,
             )
-        frame = screenshot if screenshot is not None else self.get_screenshot()
+            return replace(result, template=name) if result else None
+        if name.startswith("ios/") and name not in self._ios_visuals:
+            return None
+        if name.startswith("heroes/"):
+            frame = screenshot if screenshot is not None else self.game.get_screenshot()
+            return self._ios_find_hero(name, frame, threshold)
+        if name not in self._ios_visuals:
+            frame = screenshot if screenshot is not None else self.game.get_screenshot()
+            return self.shared_templates.match(
+                name,
+                frame,
+                self._ios_viewport(frame),
+                crop_regions,
+                threshold or self.game.default_threshold,
+                grayscale,
+                match_mode,
+            )
+        frame = screenshot if screenshot is not None else self.game.get_screenshot()
         # iOS uses its measured search regions, not Android aspect-ratio crops.
         if name == "next.png":
             if self._ios_match("ios/trial_rewards.png", frame):
@@ -221,49 +240,20 @@ class IOSLayoutMixin:
                 for key in ("ios/victory_rewards.png", "ios/victory_progress.png")
             ):
                 return None
-            if self.battle_state.mode == Mode.SEASON_AFK_STAGES:
+            if self.game.battle_state.mode == Mode.SEASON_AFK_STAGES:
                 match = self._ios_match("ios/phantimal_next.png", frame, threshold)
                 if match:
                     return replace(match, template=name)
         return self._ios_match(name, frame, threshold)
 
-    def find_any_template(
-        self,
-        templates,
-        match_mode=MatchMode.BEST,
-        threshold=None,
-        grayscale=False,
-        crop_regions=CropRegions(),
-        screenshot=None,
-    ):
-        if not self.using_ios:
-            return super().find_any_template(
-                templates, match_mode, threshold, grayscale, crop_regions, screenshot
-            )
-        frame = screenshot if screenshot is not None else self.get_screenshot()
-        for template in templates:
-            result = self.game_find_template_match(
-                template,
-                match_mode,
-                threshold or self.default_threshold,
-                grayscale,
-                crop_regions,
-                frame,
-            )
-            if result is not None:
-                return result
-        return None
-
-    def capture_debug_screenshot(self, category="manual"):
+    def capture_debug(self, category="manual"):
         """Save native and normalized pixels plus scores without uploading them."""
         try:
-            if not self.using_ios:
-                return super().capture_debug_screenshot(category)
             stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
             destination = (
                 SettingsLoader.get_app_config_dir().parent / "ios-debug" / stamp
             )
-            metadata = self.device.capture_debug(destination)
+            metadata = self.game.device.capture_debug(destination)
             frame = cv2.imread(str(destination / "normalized.bmp"))
             scores = {}
             for name in self._ios_visuals:
@@ -286,19 +276,27 @@ class IOSLayoutMixin:
         except Exception as exc:
             logging.warning("Could not capture iOS diagnostics: %s", exc)
 
-    def press_back_button(self):
-        if not self.using_ios:
-            return super().press_back_button()
-        frame = self.get_screenshot()
+    def press_back(self):
+        frame = self.game.get_screenshot()
+        if self._ios_match("ios/chat_panel.png", frame):
+            self.game.tap(ReferencePoint(540, 100))
+            return
         match = (
             self._ios_match("ios/back.png", frame)
+            or self._ios_match("ios/light_back.png", frame)
             or self._ios_match("navigation/resonating_hall_back.png", frame)
             or self._ios_match("ios/battle_modes_back.png", frame)
         )
         if match is None and self._ios_match("battle/copy.png", frame):
             match = self._ios_match("ios/records_close.png", frame)
+        if match is None and self._ios_is_tablet:
+            match = self.game.game_find_template_match(
+                "arcane_labyrinth/back_arrow.png",
+                screenshot=frame,
+                crop_regions=CropRegions(right=0.75, top=0.75),
+            )
         if match is None:
             raise GameActionFailedError(
-                "No recognized iPhone Back button. Stopped without guessing."
+                "No recognized Apple Back button. Stopped without guessing."
             )
-        self.tap(match)
+        self.game.tap(match)

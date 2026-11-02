@@ -2,13 +2,14 @@
 
 from pathlib import Path
 from unittest.mock import patch
+
 import numpy as np
 import pytest
-from adb_auto_player.device.ios.geometry import Canvas
-from adb_auto_player.device.ios.bundles import resolve_bundle
-from adb_auto_player.device.ios import integration
-from adb_auto_player.device.ios.controller import IOSController
 from adb_auto_player.device.adb import AdbController
+from adb_auto_player.device.ios import integration
+from adb_auto_player.device.ios.bundles import resolve_bundle
+from adb_auto_player.device.ios.controller import IOSController
+from adb_auto_player.device.ios.geometry import Canvas
 from adb_auto_player.device.protocol import DeviceController
 from adb_auto_player.models.device import Resolution
 from adb_auto_player.models.pydantic.adb_settings import AdbSettings
@@ -98,8 +99,8 @@ def test_connection_errors_distinguish_unplug_from_locked():
 
 
 def test_diagnostics_do_not_mask_original_errors():
-    from adb_auto_player.games.afk_journey.base import AFKJourneyBase
     from adb_auto_player.file_loader import SettingsLoader
+    from adb_auto_player.games.afk_journey.base import AFKJourneyBase
 
     with patch.object(
         SettingsLoader, "adb_settings", side_effect=RuntimeError("Config unavailable")
@@ -108,8 +109,8 @@ def test_diagnostics_do_not_mask_original_errors():
 
 
 def test_failed_template_report_includes_score_and_threshold():
-    from adb_auto_player.games.afk_journey.base import AFKJourneyBase
     from adb_auto_player.file_loader import SettingsLoader
+    from adb_auto_player.games.afk_journey.base import AFKJourneyBase
 
     with patch.object(
         SettingsLoader, "adb_settings", return_value=AdbSettings(ios={"enabled": True})
@@ -117,7 +118,7 @@ def test_failed_template_report_includes_score_and_threshold():
         game = AFKJourneyBase()
         report = {}
         assert (
-            game._ios_match(
+            game.layout.matcher._ios_match(
                 "battle/battle.png",
                 np.zeros((1920, 1080, 3), np.uint8),
                 diagnostics=report,
@@ -132,9 +133,10 @@ def test_failed_template_report_includes_score_and_threshold():
 def test_locked_device_rejects_input_before_touch(tmp_path):
     pytest.importorskip("pymobiledevice3")
     import asyncio
-    from unittest.mock import AsyncMock
     from types import SimpleNamespace
-    from adb_auto_player.device.ios.phone import Phone, DeviceLockedError
+    from unittest.mock import AsyncMock
+
+    from adb_auto_player.device.ios.phone import DeviceLockedError, Phone
 
     phone = Phone(tmp_path)
     phone.lockdown = SimpleNamespace(get_value=AsyncMock(return_value=True))

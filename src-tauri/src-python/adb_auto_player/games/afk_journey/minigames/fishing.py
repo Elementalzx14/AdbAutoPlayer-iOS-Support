@@ -5,19 +5,19 @@ from time import sleep
 
 import cv2
 import numpy as np
+
 from adb_auto_player.decorators import register_command
 from adb_auto_player.exceptions import GameTimeoutError
-from adb_auto_player.image_manipulation import Cropping
 from adb_auto_player.models import ConfidenceValue
 from adb_auto_player.models.decorators import GUIMetadata
-from adb_auto_player.models.geometry import Coordinates, Point
+from adb_auto_player.models.geometry import Coordinates, ReferencePoint
 from adb_auto_player.models.image_manipulation import CropRegions
 
 from ..base import AFKJourneyBase
 from ..gui_category import AFKJCategory
 
-STRONG_PULL = Point(780, 1290)
-FISHING_ROD = Point(535, 1450)
+STRONG_PULL = ReferencePoint(780, 1290)
+FISHING_ROD = ReferencePoint(535, 1450)
 DISTANCE_600 = 600
 DISTANCE_400 = 400
 DISTANCE_200 = 200
@@ -89,7 +89,7 @@ class Fishing(AFKJourneyBase):
     def close_fish_catch_popup(self) -> None:
         # Originally tried with back button but can lead to exiting minigame
         # clicking somewhere at the bottom-ish of the screen seems safer
-        self.tap(Point(500, 1700))
+        self.tap(ReferencePoint(500, 1700))
         sleep(2)
 
     def _close_treasure_found_popup(self) -> bool:
@@ -99,7 +99,7 @@ class Fishing(AFKJourneyBase):
             threshold=ConfidenceValue("70%"),
         ):
             logging.info("Pearl Tycoon Treasure Found popup detected, dismissing.")
-            self.tap(Point(500, 1700))
+            self.tap(ReferencePoint(500, 1700))
             sleep(2)
             return True
         return False
@@ -316,7 +316,8 @@ class Fishing(AFKJourneyBase):
                         break
 
                 if not thread or not thread.is_alive():
-                    cropped = Cropping.crop(
+                    cropped = self.layout.crop_reference(
+                        self,
                         screenshot,
                         CropRegions(left=0.1, right=0.1, top="980px", bottom="740px"),
                     )

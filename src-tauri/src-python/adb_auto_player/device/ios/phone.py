@@ -1,27 +1,28 @@
 """Direct USB iPhone transport, tested with pymobiledevice3 11.19.4."""
 
 import asyncio
+import logging
 from contextlib import AsyncExitStack
 from pathlib import Path
 
 import pymobiledevice3.common
-
 from pymobiledevice3 import usbmux
 from pymobiledevice3.exceptions import CoreDeviceError
 from pymobiledevice3.lockdown import create_using_usbmux
-from pymobiledevice3.remote.userspace_tunnel import UserspaceRsdTunnel
-from pymobiledevice3.remote.remote_service_discovery import (
-    RemoteServiceDiscoveryService,
-)
 from pymobiledevice3.remote.core_device.app_service import AppServiceService
+from pymobiledevice3.remote.core_device.hid_service import (
+    TOUCHSCREEN_STATE_CONTACT,
+    TOUCHSCREEN_STATE_RELEASE,
+    UniversalHIDServiceService,
+    touch_session,
+)
 from pymobiledevice3.remote.core_device.screen_capture_service import (
     ScreenCaptureService,
 )
-from pymobiledevice3.remote.core_device.hid_service import (
-    touch_session,
-    TOUCHSCREEN_STATE_CONTACT,
-    TOUCHSCREEN_STATE_RELEASE,
+from pymobiledevice3.remote.remote_service_discovery import (
+    RemoteServiceDiscoveryService,
 )
+from pymobiledevice3.remote.userspace_tunnel import UserspaceRsdTunnel
 
 REMOTE_CONTROL_UNSUPPORTED_CODE = 9021
 REQUIRED_SERVICES = {
@@ -57,6 +58,10 @@ class Phone:
         self.serial = None
         self.lockdown = None
         self.lock = asyncio.Lock()
+        self.video = None
+        self.video_attempted = False
+        self.capture_source = "screenshot"
+        self.capture_warning = None
 
     async def __aenter__(self):
         """Open one trusted USB device and its userspace tunnel."""
@@ -102,6 +107,10 @@ class Phone:
         await self._close_services()
         self.stack = AsyncExitStack()
         self.hid = None
+        self.video = None
+        self.video_attempted = False
+        self.capture_source = "screenshot"
+        self.capture_warning = None
         self.rsd = None
         self.lockdown = None
         return await self.__aenter__()
@@ -128,7 +137,9 @@ class Phone:
                 "iPhone or iPad, restart it, then confirm Turn On."
             )
         try:
-            from pymobiledevice3.services.mobile_image_mounter import auto_mount  # noqa: PLC0415
+            from pymobiledevice3.services.mobile_image_mounter import (
+                auto_mount,  # noqa: PLC0415
+            )
         except ImportError as exc:
             raise RuntimeError(
                 "Apple developer support is unavailable in this installation. "
@@ -181,6 +192,50 @@ class Phone:
                 )
                 return result["image"]
 
+    async def capture_frame(self):
+        """Prefer fresh decoded USB video, with native screenshot fallback."""
+        import cv2
+        import numpy as np
+
+        await self.ensure_unlocked()
+        if self.video is not None:
+            try:
+                frame = await self.video.read()
+                self.capture_source = "video"
+                return frame
+            except Exception as exc:
+                logging.warning("Apple video stopped; using screenshots: %s", exc)
+                self.capture_warning = (
+                    "Video stopped; using slower screenshots: " + str(exc)
+                )
+                await self.video.close()
+                self.video = None
+                if self.hid is not None:
+                    await self.hid.close()
+                    self.hid = None
+        data = await self.screenshot()
+        frame = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+        if frame is None:
+            raise RuntimeError("Invalid Apple screenshot.")
+        self.capture_source = "screenshot"
+        # An existing touch-only media session cannot be replaced underneath
+        # its HID connection. Reconnection starts a new video attempt instead.
+        if not self.video_attempted and self.hid is None:
+            self.video_attempted = True
+            try:
+                from .video import VideoCapture
+
+                self.video = await self.stack.enter_async_context(
+                    VideoCapture(self.rsd, (frame.shape[1], frame.shape[0]))
+                )
+                logging.info("Apple USB video capture is active.")
+            except Exception as exc:
+                logging.warning("Apple video unavailable; using screenshots: %s", exc)
+                self.capture_warning = (
+                    "Video unavailable; using slower screenshots: " + str(exc)
+                )
+        return frame
+
     async def launch(self, bundle, restart=False):
         """Open AFK Journey on the phone."""
         await self.ensure_unlocked()
@@ -214,7 +269,12 @@ class Phone:
         if self.hid is not None:
             return
         try:
-            self.hid = await self.stack.enter_async_context(touch_session(self.rsd))
+            session = (
+                UniversalHIDServiceService(self.rsd)
+                if self.video is not None
+                else touch_session(self.rsd)
+            )
+            self.hid = await self.stack.enter_async_context(session)
         except CoreDeviceError as exc:
             if (
                 exc.code != REMOTE_CONTROL_UNSUPPORTED_CODE

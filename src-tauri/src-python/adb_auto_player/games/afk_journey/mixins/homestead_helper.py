@@ -13,7 +13,7 @@ from adb_auto_player.games.afk_journey.gui_category import AFKJCategory
 from adb_auto_player.games.afk_journey.settings import HomesteadCraftStopCondition
 from adb_auto_player.models import ConfidenceValue
 from adb_auto_player.models.decorators import GUIMetadata
-from adb_auto_player.models.geometry import Point
+from adb_auto_player.models.geometry import Point, ReferencePoint
 from adb_auto_player.models.image_manipulation import CropRegions
 from adb_auto_player.ocr import RapidOCRBackend
 from adb_auto_player.util import SummaryGenerator
@@ -56,7 +56,7 @@ class HomesteadHelperMixin(AFKJourneyBase):
     HOMESTEAD_INSUFFICIENT_RESOURCES_TEMPLATE = (
         "homestead/insufficient_resources_popup.png"
     )
-    HOMESTEAD_INSUFFICIENT_RESOURCES_CLOSE_POINT = Point(540, 1307)
+    HOMESTEAD_INSUFFICIENT_RESOURCES_CLOSE_POINT = ReferencePoint(540, 1307)
     HOMESTEAD_MULTIPLIER_X10_TEMPLATE = "homestead/multiplier_x10.png"
     HOMESTEAD_MULTIPLIER_STATE_TEMPLATE = "homestead/multiplier_state.png"
     HOMESTEAD_CRAFTING_SCREEN_TEMPLATE = "homestead/crafting_screen_check.png"
@@ -84,25 +84,25 @@ class HomesteadHelperMixin(AFKJourneyBase):
     HOMESTEAD_INGREDIENT_TAP_TO_CLOSE_TEMPLATE = "homestead/ingredient_tap_to_close.png"
 
     # Fixed tap point for the multiplier button (cycles x1 -> x5 -> x10)
-    HOMESTEAD_MULTIPLIER_BUTTON_POINT = Point(760, 1660)
+    HOMESTEAD_MULTIPLIER_BUTTON_POINT = ReferencePoint(760, 1660)
     # Fixed tap point for the action button (Make / Alchemize / Forge)
-    HOMESTEAD_ACTION_BUTTON_POINT = Point(540, 1680)
+    HOMESTEAD_ACTION_BUTTON_POINT = ReferencePoint(540, 1680)
     # Fixed tap point for the greyed-out action button (centre slot).
-    HOMESTEAD_GRAY_ACTION_BUTTON_POINT = Point(520, 1675)
+    HOMESTEAD_GRAY_ACTION_BUTTON_POINT = ReferencePoint(520, 1675)
     # Fixed tap point for the ingredient crafting action button (Smelt/Shape/...).
-    HOMESTEAD_INGREDIENT_ACTION_BUTTON_POINT = Point(631, 1811)
+    HOMESTEAD_INGREDIENT_ACTION_BUTTON_POINT = ReferencePoint(631, 1811)
     # Tap point to dismiss the "Tap to close" rewards popup (bottom of screen).
-    HOMESTEAD_TAP_TO_CLOSE_POINT = Point(540, 1800)
+    HOMESTEAD_TAP_TO_CLOSE_POINT = ReferencePoint(540, 1800)
     # Fixed tap point for the Requests world-icon (always at same position)
-    HOMESTEAD_REQUESTS_POINT = Point(60, 1245)
+    HOMESTEAD_REQUESTS_POINT = ReferencePoint(60, 1245)
 
     # The four request NPC portraits at the bottom of the Requests view. Tapping
     # one selects that request and updates the "Basic Rewards" panel at the top.
     HOMESTEAD_REQUEST_PORTRAIT_POINTS: ClassVar[tuple[Point, ...]] = (
-        Point(270, 1815),
-        Point(452, 1815),
-        Point(640, 1815),
-        Point(822, 1815),
+        ReferencePoint(270, 1815),
+        ReferencePoint(452, 1815),
+        ReferencePoint(640, 1815),
+        ReferencePoint(822, 1815),
     )
     # Crop region (x1, y1, x2, y2) of the Wish Point reward number shown under
     # "Basic Rewards" (left reward card) for the currently selected request.
@@ -285,7 +285,7 @@ class HomesteadHelperMixin(AFKJourneyBase):
             )
             if mine is not None:
                 break
-            self.swipe_up(x=540, sy=1500, ey=700)
+            self.swipe_up(x=540, sy=1500, ey=700, reference=True)
             sleep(1.5)
 
         if mine is None:
@@ -624,7 +624,7 @@ class HomesteadHelperMixin(AFKJourneyBase):
             self.tap(deliver)
             sleep(3)  # wait for reward popup to appear
             # Tap the lower half of the screen to dismiss the reward popup.
-            self.tap(Point(540, 1400))
+            self.tap(ReferencePoint(540, 1400))
             # Wait for Quick Select to reappear.
             try:
                 self.wait_for_template(
@@ -871,9 +871,9 @@ class HomesteadHelperMixin(AFKJourneyBase):
 
         # Drag the amount slider ~20% to the right (from 0).
         logging.info("Dragging amount slider to the right.")
-        self.device.swipe(
-            Point(self.HOMESTEAD_SLIDER_START_X, self.HOMESTEAD_SLIDER_Y),
-            Point(self.HOMESTEAD_SLIDER_END_X, self.HOMESTEAD_SLIDER_Y),
+        self.swipe(
+            ReferencePoint(self.HOMESTEAD_SLIDER_START_X, self.HOMESTEAD_SLIDER_Y),
+            ReferencePoint(self.HOMESTEAD_SLIDER_END_X, self.HOMESTEAD_SLIDER_Y),
             duration=0.6,
         )
         sleep(1.5)

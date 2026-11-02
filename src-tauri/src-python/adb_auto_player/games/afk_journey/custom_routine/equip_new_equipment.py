@@ -12,7 +12,7 @@ from adb_auto_player.exceptions import (
 )
 from adb_auto_player.log import LogPreset
 from adb_auto_player.models import ConfidenceValue
-from adb_auto_player.models.geometry import Point
+from adb_auto_player.models.geometry import ReferencePoint
 from adb_auto_player.models.image_manipulation import CropRegions
 from adb_auto_player.models.template_matching import TemplateMatchResult
 from adb_auto_player.util import StringHelper
@@ -21,8 +21,8 @@ from ..base import AFKJourneyBase
 
 
 class EquipNewEquipment(AFKJourneyBase):
-    _EQUIPMENT_POINT = Point(970, 1660)
-    _TAP_TO_CLOSE_POINT = Point(540, 1814)
+    _EQUIPMENT_POINT = ReferencePoint(970, 1660)
+    _TAP_TO_CLOSE_POINT = ReferencePoint(540, 1814)
     _EQUIPMENT_TEMPLATES = (
         "equipment/support.png",
         "equipment/mage.png",

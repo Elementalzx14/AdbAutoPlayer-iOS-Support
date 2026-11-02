@@ -334,5 +334,482 @@
       0.9414414414414415
     ],
     "margin_fraction": 0.045
+  },
+  "battle_modes/duras_trials.png": {
+    "file": "dura_card.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.13333333333333333,
+      0.6203346203346203,
+      0.34814814814814815,
+      0.6486486486486487
+    ],
+    "margin_fraction": 0.045,
+    "search_region": [
+      0,
+      0.12,
+      0.99,
+      0.82
+    ]
+  },
+  "battle_modes/supreme_arena.png": {
+    "file": "supreme_card.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.3925925925925926,
+      0.6229086229086229,
+      0.6092592592592593,
+      0.6473616473616474
+    ],
+    "margin_fraction": 0.045,
+    "search_region": [
+      0,
+      0.12,
+      0.99,
+      0.82
+    ]
+  },
+  "dream_realm/label.png": {
+    "file": "dream_card.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.39444444444444443,
+      0.3384813384813385,
+      0.6055555555555555,
+      0.3667953667953668
+    ],
+    "margin_fraction": 0.045,
+    "search_region": [
+      0,
+      0.12,
+      0.99,
+      0.82
+    ]
+  },
+  "duras_trials/socketed_charms_overview.png": {
+    "file": "dura_overview.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.8833333333333333,
+      0.18082368082368083,
+      0.9657407407407408,
+      0.19626769626769627
+    ],
+    "margin_fraction": 0.045
+  },
+  "duras_trials/sweep.png": {
+    "file": "dura_sweep.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.5092592592592593,
+      0.8063063063063063,
+      0.6314814814814815,
+      0.833976833976834
+    ],
+    "margin_fraction": 0.045
+  },
+  "ios/dura_limit.png": {
+    "file": "dura_limit.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.36018518518518516,
+      0.51994851994852,
+      0.6388888888888888,
+      0.5418275418275418
+    ],
+    "margin_fraction": 0.045
+  },
+  "ios/light_back.png": {
+    "file": "light_back.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.037037037037037035,
+      0.9137709137709138,
+      0.09722222222222222,
+      0.9459459459459459
+    ],
+    "margin_fraction": 0.045,
+    "search_region": [
+      0,
+      0.82,
+      0.18,
+      0.99
+    ]
+  },
+  "legend_trials/s_header.png": {
+    "file": "legend_header.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.1574074074074074,
+      0.06177606177606178,
+      0.48055555555555557,
+      0.09974259974259975
+    ],
+    "margin_fraction": 0.045
+  },
+  "legend_trials/banner_lightbearer.png": {
+    "file": "legend_lightbearer.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.1675925925925926,
+      0.29922779922779924,
+      0.43703703703703706,
+      0.33526383526383524
+    ],
+    "margin_fraction": 0.045
+  },
+  "legend_trials/banner_wilder.png": {
+    "file": "legend_wilder.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.15925925925925927,
+      0.4420849420849421,
+      0.4462962962962963,
+      0.47812097812097815
+    ],
+    "margin_fraction": 0.045
+  },
+  "legend_trials/banner_graveborn.png": {
+    "file": "legend_graveborn.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.19444444444444445,
+      0.5900900900900901,
+      0.4638888888888889,
+      0.6235521235521235
+    ],
+    "margin_fraction": 0.045
+  },
+  "legend_trials/banner_mauler.png": {
+    "file": "legend_mauler.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.19444444444444445,
+      0.7413127413127413,
+      0.4166666666666667,
+      0.7702702702702703
+    ],
+    "margin_fraction": 0.045
+  },
+  "legend_trials/faction_icon_wilder.png": {
+    "file": "legend_locked_wilder.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.16203703703703703,
+      0.5238095238095238,
+      0.2111111111111111,
+      0.5637065637065637
+    ],
+    "margin_fraction": 0.045
+  },
+  "legend_trials/faction_icon_graveborn.png": {
+    "file": "legend_locked_graveborn.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.1935185185185185,
+      0.666023166023166,
+      0.23981481481481481,
+      0.7065637065637066
+    ],
+    "margin_fraction": 0.045
+  },
+  "legend_trials/faction_icon_mauler.png": {
+    "file": "legend_locked_mauler.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.16296296296296298,
+      0.8178893178893178,
+      0.21944444444444444,
+      0.8564993564993565
+    ],
+    "margin_fraction": 0.045
+  },
+  "ios/legend_intro.png": {
+    "file": "legend_intro.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.044444444444444446,
+      0.3307593307593308,
+      0.9537037037037037,
+      0.3906048906048906
+    ],
+    "margin_fraction": 0.025
+  },
+  "ios/legend_intro_close.png": {
+    "file": "legend_intro_close.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.42962962962962964,
+      0.9362934362934363,
+      0.5722222222222222,
+      0.9562419562419563
+    ],
+    "margin_fraction": 0.025
+  },
+  "ios/trial_rewards.png": {
+    "file": "trial_rewards.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.3972222222222222,
+      0.6151866151866152,
+      0.6018518518518519,
+      0.6332046332046332
+    ],
+    "margin_fraction": 0.04,
+    "requires": [
+      "ios/trial_victory.png"
+    ]
+  },
+  "ios/trial_victory.png": {
+    "file": "trial_victory.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.1398148148148148,
+      0.1435006435006435,
+      0.8629629629629629,
+      0.2471042471042471
+    ],
+    "margin_fraction": 0.04
+  },
+  "ios/next.png": {
+    "file": "trial_next.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.6592592592592592,
+      0.9015444015444015,
+      0.7527777777777778,
+      0.9279279279279279
+    ],
+    "margin_fraction": 0.04
+  },
+  "arena/label.png": {
+    "file": "arena_card.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.6944444444444444,
+      0.33976833976833976,
+      0.8231481481481482,
+      0.3680823680823681
+    ],
+    "search_region": [
+      0.6,
+      0.12,
+      0.98,
+      0.82
+    ],
+    "margin_fraction": 0.045
+  },
+  "ios/chat_open.png": {
+    "file": "chat_open.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.9268518518518518,
+      0.4240669240669241,
+      0.975,
+      0.45045045045045046
+    ],
+    "margin_fraction": 0.035,
+    "search_region": [
+      0.86,
+      0.2,
+      0.995,
+      0.65
+    ]
+  },
+  "arcane_labyrinth/quit.png": {
+    "file": "arcane_quit.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.9101851851851852,
+      0.9407979407979408,
+      0.9629629629629629,
+      0.9594594594594594
+    ],
+    "margin_fraction": 0.035
+  },
+  "ios/chat_channel.png": {
+    "file": "chat_channel.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.13518518518518519,
+      0.21171171171171171,
+      0.21666666666666667,
+      0.2277992277992278
+    ],
+    "margin_fraction": 0.035
+  },
+  "chat/label_world_chat.png": {
+    "file": "chat_world_header.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.34814814814814815,
+      0.15572715572715573,
+      0.5037037037037037,
+      0.17503217503217502
+    ],
+    "margin_fraction": 0.035
+  },
+  "ios/chat_world_tab.png": {
+    "file": "chat_world_tab.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.2518518518518518,
+      0.21171171171171171,
+      0.3138888888888889,
+      0.22715572715572716
+    ],
+    "margin_fraction": 0.035
+  },
+  "ios/chat_panel.png": {
+    "file": "chat_placeholder.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.262037037037037,
+      0.8159588159588159,
+      0.4111111111111111,
+      0.833976833976834
+    ],
+    "margin_fraction": 0.035,
+    "requires": [
+      "ios/chat_settings.png"
+    ]
+  },
+  "ios/chat_settings.png": {
+    "file": "chat_settings.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.1574074074074074,
+      0.8005148005148005,
+      0.1962962962962963,
+      0.8281853281853282
+    ],
+    "margin_fraction": 0.035
+  },
+  "battle_modes/guild_mode_tab.png": {
+    "file": "guild_mode_tab.png",
+    "reference_size": [
+      1080,
+      1554
+    ],
+    "threshold": 0.92,
+    "region": [
+      0.41574074074074074,
+      0.8397683397683398,
+      0.5907407407407408,
+      0.8642213642213642
+    ],
+    "margin_fraction": 0.035
   }
 }

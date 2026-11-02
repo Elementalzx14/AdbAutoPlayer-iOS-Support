@@ -10,7 +10,7 @@ from adb_auto_player.exceptions import (
 )
 from adb_auto_player.models import ConfidenceValue
 from adb_auto_player.models.decorators import GUIMetadata
-from adb_auto_player.models.geometry import Point
+from adb_auto_player.models.geometry import ReferencePoint
 from adb_auto_player.models.image_manipulation import CropRegions
 from adb_auto_player.util import SummaryGenerator
 
@@ -148,7 +148,7 @@ class SeasonLegendTrial(AFKJourneyBase):
                         self._select_legend_trials_floor()
                         continue
                     case "battle/victory_rewards.png":
-                        self.tap(Point(x=550, y=1800))
+                        self.tap(ReferencePoint(x=550, y=1800))
                         self.sleep_navigation()
                         continue
                     case "battle/records.png" | "battle/battle.png":

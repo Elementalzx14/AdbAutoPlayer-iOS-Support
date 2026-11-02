@@ -3,35 +3,37 @@
 import logging
 import re
 from datetime import timedelta
+from functools import cached_property
 from time import monotonic, sleep
 from typing import Any
 
-from adb_auto_player.decorators import register_cache, register_game, register_command
+from adb_auto_player.decorators import register_cache, register_command, register_game
 from adb_auto_player.exceptions import (
     AutoPlayerWarningError,
     GameActionFailedError,
     GameNotRunningOrFrozenError,
     GameTimeoutError,
 )
+from adb_auto_player.file_loader import SettingsLoader
 from adb_auto_player.game import Game
-from adb_auto_player.image_manipulation import Cropping
 from adb_auto_player.models import ConfidenceValue
 from adb_auto_player.models.decorators import CacheGroup, GameGUIMetadata, GUIMetadata
 from adb_auto_player.models.device import Resolution
-from adb_auto_player.models.geometry import Point
+from adb_auto_player.models.geometry import ReferencePoint
 from adb_auto_player.models.image_manipulation import CropRegions, CropResult
-from adb_auto_player.models.template_matching import TemplateMatchResult
+from adb_auto_player.models.template_matching import MatchMode, TemplateMatchResult
 from adb_auto_player.tauri_context import profile_aware_cache
 from adb_auto_player.template_matching import TemplateMatcher
 from adb_auto_player.util import SummaryGenerator
 
 from .battle_state import BattleState, Mode
 from .gui_category import AFKJCategory
+from .layout import AndroidLayout, AppleLayout
+from .layout_types import NOT_HANDLED
 from .mixins.dream_realm import DreamRealmMixin
 from .mixins.guild_member_scan import GuildMemberScanMixin
 from .mixins.hero_scanner import HeroScannerMixin
-from .ios_layout import IOSLayoutMixin
-from .navigation import Navigation
+from .navigation import Navigation, Overview
 from .settings import Settings
 
 
@@ -44,7 +46,6 @@ from .settings import Settings
     ),
 )
 class AFKJourneyBase(
-    IOSLayoutMixin,
     Navigation,
     HeroScannerMixin,
     DreamRealmMixin,
@@ -52,6 +53,72 @@ class AFKJourneyBase(
     Game,
 ):
     """AFK Journey Base Class."""
+
+    @cached_property
+    def layout(self):
+        return (
+            AppleLayout(self)
+            if SettingsLoader.adb_settings().ios.enabled
+            else AndroidLayout()
+        )
+
+    def game_find_template_match(
+        self,
+        template,
+        match_mode=MatchMode.BEST,
+        threshold=None,
+        grayscale=False,
+        crop_regions=CropRegions(),
+        screenshot=None,
+    ):
+        result = self.layout.match_template(
+            template, match_mode, threshold, grayscale, crop_regions, screenshot
+        )
+        if result is not NOT_HANDLED:
+            return result
+        return super().game_find_template_match(
+            template, match_mode, threshold, grayscale, crop_regions, screenshot
+        )
+
+    def press_back_button(self):
+        self.layout.press_back(self)
+
+    def find_all_template_matches(
+        self,
+        template,
+        threshold=None,
+        grayscale=False,
+        crop_regions=CropRegions(),
+        min_distance=10,
+    ):
+        result = self.layout.match_all(
+            template, threshold, grayscale, crop_regions, min_distance
+        )
+        if result is not NOT_HANDLED:
+            return result
+        return super().find_all_template_matches(
+            template, threshold, grayscale, crop_regions, min_distance
+        )
+
+    def resolve_input_coordinates(self, coordinates):
+        return self.layout.resolve_point(self, coordinates)
+
+    def _navigate_to_overview(self, destination=Overview.WORLD):
+        self.layout.prepare_overview(self)
+        return super()._navigate_to_overview(destination)
+
+    def find_worst_match(self, template, grayscale=False, crop_regions=CropRegions()):
+        result = self.layout.worst_match(template, grayscale, crop_regions)
+        if result is not NOT_HANDLED:
+            return result
+        return super().find_worst_match(template, grayscale, crop_regions)
+
+    def capture_debug_screenshot(self, category="manual"):
+        try:
+            if self.layout.capture_debug(category) is NOT_HANDLED:
+                super().capture_debug_screenshot(category)
+        except Exception as exc:
+            logging.warning("Could not capture device diagnostics: %s", exc)
 
     @register_command(
         name="CaptureDeviceDebug",
@@ -675,7 +742,9 @@ class AFKJourneyBase(
                 if match is not None:
                     return match
 
-                curr_crop: CropResult = Cropping.crop(screenshot, roi_crop)
+                curr_crop: CropResult = self.layout.crop_reference(
+                    self, screenshot, roi_crop
+                )
 
                 if prev_crop is not None and TemplateMatcher.similar_image(
                     prev_crop.image,
@@ -717,7 +786,7 @@ class AFKJourneyBase(
                 result = True
 
             case "battle/victory_rewards.png":
-                self.tap(Point(x=550, y=1800))
+                self.tap(ReferencePoint(x=550, y=1800))
                 self.sleep_navigation()
                 result = True
 
@@ -762,7 +831,7 @@ class AFKJourneyBase(
         """Handle power up screen."""
         if self.battle_state.mode == Mode.DURAS_TRIALS:
             self.tap(
-                Point(x=550, y=1800),
+                ReferencePoint(x=550, y=1800),
                 log_message=f"Lost Battle #{attempt}, retrying",
             )
             self.sleep_navigation()
@@ -804,7 +873,7 @@ class AFKJourneyBase(
             self.press_back_button()
             return False
 
-        self.tap(Point(x=950, y=1800))
+        self.tap(ReferencePoint(x=950, y=1800))
         if self.battle_state.mode == Mode.LEGEND_TRIALS:
             self.sleep_navigation()
         # Wait for subsequent Next button and tap to proceed

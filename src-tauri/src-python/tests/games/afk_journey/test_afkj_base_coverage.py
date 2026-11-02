@@ -2,6 +2,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 from adb_auto_player.exceptions import GameActionFailedError, GameTimeoutError
 from adb_auto_player.games.afk_journey.base import AFKJourneyBase
+from adb_auto_player.games.afk_journey.layout import AndroidLayout
 from adb_auto_player.models import ConfidenceValue
 from adb_auto_player.models.geometry import Box, Point
 from adb_auto_player.models.template_matching.template_match_result import (
@@ -35,9 +36,9 @@ class TestAFKJourneyBaseCoverage:
             ),
             patch.object(
                 AFKJourneyBase,
-                "using_ios",
+                "layout",
                 new_callable=PropertyMock,
-                return_value=False,
+                return_value=AndroidLayout(),
             ),
         ):
             # The method should return False when GameActionFailedError is caught

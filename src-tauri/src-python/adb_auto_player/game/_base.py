@@ -7,6 +7,8 @@ from time import sleep
 from typing import Literal
 
 import numpy as np
+from pydantic import BaseModel
+
 from adb_auto_player.device.adb import DeviceStream
 from adb_auto_player.device.protocol import DeviceController
 from adb_auto_player.models import ConfidenceValue
@@ -15,7 +17,6 @@ from adb_auto_player.models.geometry import Coordinates, Point
 from adb_auto_player.models.image_manipulation import CropRegions
 from adb_auto_player.models.pydantic.app_settings import AppSettings
 from adb_auto_player.models.template_matching import MatchMode, TemplateMatchResult
-from pydantic import BaseModel
 
 
 class _GameBase(ABC):
@@ -35,6 +36,11 @@ class _GameBase(ABC):
     _device: DeviceController | None
     _stream: DeviceStream | None
     _target_package_name: str | None
+    _realtime_capture_required: bool = False
+
+    def resolve_input_coordinates(self, coordinates: Coordinates) -> Coordinates:
+        """Resolve reference points while preserving image coordinates."""
+        return coordinates
 
     # ------------------------------------------------------------------
     # Properties — implemented by Game

@@ -1,23 +1,31 @@
 """Apple USB implementation of the device operations used by existing games."""
 
-import logging
-import shutil
-import tempfile
 import json
-from pathlib import Path
+import logging
 import queue
+import shutil
 import subprocess
+import tempfile
 import threading
 import weakref
+from pathlib import Path
 
 from adb_auto_player.exceptions import AutoPlayerUnrecoverableError
 from adb_auto_player.file_loader import SettingsLoader
 from adb_auto_player.models.device import DisplayInfo, Orientation
+
 from .integration import worker_command, worker_environment
 
 
 class IOSController:
     """Keep game commands and settings shared; translate only device operations."""
+
+    supports_offscreen_taps = False
+
+    @property
+    def realtime_capture_ready(self):
+        """Only the active video path is suitable for reaction-based tasks."""
+        return self.metadata.get("capture_source") == "video"
 
     _instances = weakref.WeakSet()
     stop_requested = staticmethod(lambda: False)
@@ -124,6 +132,12 @@ class IOSController:
         return DisplayInfo(resolution=self.resolution, orientation=orientation)
 
     def _update_metadata(self, metadata):
+        source = metadata.get("capture_source")
+        if source and source != self.metadata.get("capture_source"):
+            logging.info("Apple capture source: %s", source)
+        warning = metadata.get("capture_warning")
+        if warning and warning != self.metadata.get("capture_warning"):
+            logging.warning("Apple capture: %s", warning)
         if not self.metadata:
             logging.info(
                 "iOS device: %s; iOS %s; native screenshot %s; canvas %s",
@@ -135,8 +149,9 @@ class IOSController:
             ratio = metadata["native_size"][1] / metadata["native_size"][0]
             if metadata["model"].startswith("iPad"):
                 logging.warning(
-                    "Experimental iPad visual profile: M1 iPad Air AFK victory/next "
-                    "and Season copy/battle/defeat tested. Other layouts, trials, "
+                    "Experimental iPad support: M1 iPad Air AFK and Lightbearer "
+                    "Legend victory/progression, Dura cleared-state stop, and "
+                    "Season copy/battle/defeat tested. Other modes, factions, "
                     "and seasonal victories still require validation."
                 )
             elif not 2.1 <= ratio <= 2.25:

@@ -8,7 +8,7 @@ from adb_auto_player.decorators import register_command, register_custom_routine
 from adb_auto_player.exceptions import GameTimeoutError
 from adb_auto_player.games.afk_journey.gui_category import AFKJCategory
 from adb_auto_player.models.decorators import GUIMetadata
-from adb_auto_player.models.geometry import Point
+from adb_auto_player.models.geometry import ReferencePoint
 
 if TYPE_CHECKING:
     from typing import Any
@@ -43,7 +43,7 @@ class DreamRealmMixin(BaseClass):
         """Initialize DreamRealmMixin."""
         super().__init__()
         # Battle and Skip buttons are in the same coordinates.
-        self.battle_skip_coord = Point(550, 1790)
+        self.battle_skip_coord = ReferencePoint(550, 1790)
 
     @register_command(
         name="DreamRealm",
@@ -140,7 +140,7 @@ class DreamRealmMixin(BaseClass):
         """Enter Dream Realm."""
         logging.info("Entering Dream Realm...")
         self.navigate_to_world()
-        self.tap(Point(460, 1830))  # Battle Modes
+        self.tap(ReferencePoint(460, 1830))  # Battle Modes
         try:
             dr_mode = self.wait_for_template(
                 "dream_realm/label.png",

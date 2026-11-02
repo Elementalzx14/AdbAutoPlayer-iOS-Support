@@ -10,7 +10,7 @@ from adb_auto_player.exceptions import (
     GameTimeoutError,
 )
 from adb_auto_player.models import ConfidenceValue
-from adb_auto_player.models.geometry import Offset, Point
+from adb_auto_player.models.geometry import Offset, ReferencePoint
 from adb_auto_player.models.image_manipulation import CropRegions
 from adb_auto_player.models.template_matching import TemplateMatchResult
 
@@ -32,9 +32,9 @@ class Navigation(PopupMessageHandler, ABC):
         return self.template_timeout
 
     # Points (these are the same for World and Homestead overview)
-    CENTER_POINT = Point(x=1080 // 2, y=1920 // 2)
-    RESONATING_HALL_POINT = Point(x=620, y=1830)
-    BATTLE_MODES_POINT = Point(x=460, y=1830)
+    CENTER_POINT = ReferencePoint(x=1080 // 2, y=1920 // 2)
+    RESONATING_HALL_POINT = ReferencePoint(x=620, y=1830)
+    BATTLE_MODES_POINT = ReferencePoint(x=460, y=1830)
 
     # Kept short and slow: a long/fast swipe can be interpreted as a fling
     # with extra momentum on real phone touchscreens (vs. emulators), which
@@ -150,7 +150,7 @@ class Navigation(PopupMessageHandler, ABC):
                 self.press_back_button()
                 self.sleep_action()
             case "arcane_labyrinth/select_a_crest.png":
-                self.tap(Point(550, 1460))  # bottom crest
+                self.tap(ReferencePoint(550, 1460))  # bottom crest
                 self.sleep_action()
                 self.tap(result)
                 self.sleep_action()
@@ -321,7 +321,7 @@ class Navigation(PopupMessageHandler, ABC):
         except GameTimeoutError as e:
             self.capture_debug_screenshot("afk_stages_screen_not_found")
             raise e
-        self.tap(Point(x=550, y=1080))  # click rewards popup
+        self.tap(ReferencePoint(x=550, y=1080))  # click rewards popup
         self.sleep_action()
 
     def _navigate_to_battle_modes_screen(self) -> None:
@@ -498,6 +498,7 @@ class Navigation(PopupMessageHandler, ABC):
                 sy=self._BATTLE_MODES_SWIPE_SY,
                 ey=self._BATTLE_MODES_SWIPE_EY,
                 duration=self._BATTLE_MODES_SWIPE_DURATION,
+                reference=True,
             )
             self.sleep_navigation()
             attempts += 1
@@ -524,6 +525,7 @@ class Navigation(PopupMessageHandler, ABC):
         )
 
         self._tap_till_template_disappears(result.template)
+        self.layout.finish_legend_entry(self)
         try:
             self.wait_for_any_template(
                 templates=[
@@ -600,7 +602,7 @@ class Navigation(PopupMessageHandler, ABC):
 
         logging.info("Opening World Chat")
         self.navigate_to_current_overview()
-        self.device.press_enter()
+        self.layout.open_chat(self)
         self.sleep_navigation()
 
     def navigate_to_team_up_chat(self) -> None:

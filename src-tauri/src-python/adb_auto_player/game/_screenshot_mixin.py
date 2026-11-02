@@ -7,6 +7,7 @@ from time import monotonic, sleep
 
 import cv2
 import numpy as np
+
 from adb_auto_player.device.adb import DeviceStream
 from adb_auto_player.exceptions import (
     AutoPlayerWarningError,
@@ -86,6 +87,14 @@ class _ScreenshotMixin(_GameBase):
         for attempt in range(max_retries):
             try:
                 data = self.device.screenshot(self.package_name_prefixes)
+                if (
+                    self._realtime_capture_required
+                    and not self.device.realtime_capture_ready
+                ):
+                    raise AutoPlayerWarningError(
+                        "Video capture was interrupted. This reaction-based task "
+                        "stopped before using slower screenshot input."
+                    )
                 if isinstance(data, bytes):
                     return self._apply_vertical_offset_to_screenshot(
                         IO.get_bgr_np_array_from_png_bytes(data)

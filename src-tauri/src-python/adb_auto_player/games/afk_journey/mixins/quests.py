@@ -13,7 +13,7 @@ from adb_auto_player.games.afk_journey.gui_category import AFKJCategory
 from adb_auto_player.games.afk_journey.minigames.matching_cards import MatchingCards
 from adb_auto_player.models import ConfidenceValue
 from adb_auto_player.models.decorators import GUIMetadata
-from adb_auto_player.models.geometry import Point
+from adb_auto_player.models.geometry import Point, ReferencePoint
 from adb_auto_player.models.image_manipulation import CropRegions
 from adb_auto_player.ocr import RapidOCRBackend
 
@@ -110,7 +110,7 @@ class QuestMixin(AFKJourneyBase, ABC):
             self.tap(farewell, scale=True)
             sleep(2)
             # Manually path away from the dialogue
-            self.tap(Point(880, 365))
+            self.tap(ReferencePoint(880, 365))
             sleep(2)  # Long wait to path before we check for quest images
             reset = True
 
@@ -125,7 +125,7 @@ class QuestMixin(AFKJourneyBase, ABC):
             # Blind tap sits next to the Battle tab: keep the screen that
             # triggered it so bug reports show what was actually there
             self.capture_debug_screenshot("quests_blind_popup_tap")
-            self.tap(Point(550, 1825))
+            self.tap(ReferencePoint(550, 1825))
             sleep(2)
             back_arrow = self.game_find_template_match("quests/back_arrow.png")
             if back_arrow:
@@ -171,7 +171,7 @@ class QuestMixin(AFKJourneyBase, ABC):
                 f"Nudging character from ({sx}, {sy}) to ({ex}, {ey}) "
                 f"(angle: {math.degrees(angle):.1f}°)"
             )
-            self.device.swipe(Point(sx, sy), Point(ex, ey), duration=0.5)
+            self.swipe(Point(sx, sy), Point(ex, ey), duration=0.5)
             sleep(2)
         except Exception as e:
             logging.error(f"Failed to nudge character: {e}")
@@ -274,7 +274,7 @@ class QuestMixin(AFKJourneyBase, ABC):
         if tap_and_hold is not None:
             logging.info("TAP & HOLD button detected — holding at button position")
             cast_point = Point(tap_and_hold.x, tap_and_hold.y)
-            self.device.swipe(cast_point, cast_point, duration=3.0)
+            self.swipe(cast_point, cast_point, duration=3.0)
             return True
 
         holding_buttons = [
@@ -305,12 +305,14 @@ class QuestMixin(AFKJourneyBase, ABC):
                 result.template == "quests/generic_hold"
                 and abs(result.x - 540) > _GENERIC_HOLD_CENTER_TOLERANCE
             ):
-                hold_point = Point(540, result.y + 170)
+                hold_point = self.layout.offset_point(
+                    self, Point(540, result.y), dy=170
+                )
             logging.info(
                 "Holding button: "
                 + result.template.split("/")[-1].replace("_", " ").capitalize()
             )
-            self.device.swipe(hold_point, hold_point, duration=3.0)
+            self.swipe(hold_point, hold_point, duration=3.0)
             return True
 
         return False
@@ -452,17 +454,17 @@ class QuestMixin(AFKJourneyBase, ABC):
         """Handle time-change and outfit-change prompts."""
         if self.find_any_template(["quests/time_change"]):
             logging.info("Changing time")
-            self.tap(Point(550, 1500))
+            self.tap(ReferencePoint(550, 1500))
             return True
 
         if self.find_any_template(["confirm_text_italic"]):
             logging.info("Changing outfit")
-            self.tap(Point(730, 1800))
+            self.tap(ReferencePoint(730, 1800))
             confirm = self.game_find_template_match(template="navigation/confirm")
             if confirm:
                 self.tap(confirm)
                 sleep(2)
-                self.tap(Point(100, 1800))
+                self.tap(ReferencePoint(100, 1800))
                 sleep(2)
             return True
 

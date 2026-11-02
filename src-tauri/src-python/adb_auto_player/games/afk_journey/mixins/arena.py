@@ -7,7 +7,7 @@ from adb_auto_player.exceptions import GameTimeoutError
 from adb_auto_player.games.afk_journey.base import AFKJourneyBase
 from adb_auto_player.games.afk_journey.gui_category import AFKJCategory
 from adb_auto_player.models.decorators import GUIMetadata
-from adb_auto_player.models.geometry import Point
+from adb_auto_player.models.geometry import ReferencePoint
 from adb_auto_player.models.image_manipulation import CropRegions
 
 
@@ -85,7 +85,7 @@ class ArenaMixin(AFKJourneyBase):
                 timeout=self.min_timeout,
                 timeout_message="No notices found.",
             )
-            self.tap(Point(380, 1890))
+            self.tap(ReferencePoint(380, 1890))
             self.sleep_navigation()
 
             return True
@@ -190,7 +190,7 @@ class ArenaMixin(AFKJourneyBase):
             (
                 self.tap(cancel)
                 if cancel
-                else self.tap(Point(550, 1790))  # Cancel fallback
+                else self.tap(ReferencePoint(550, 1790))  # Cancel fallback
             )
 
             return False

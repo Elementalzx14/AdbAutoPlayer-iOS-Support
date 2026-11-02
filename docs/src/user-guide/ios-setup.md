@@ -8,7 +8,9 @@ not update 12.13.7. A public 12.13.7 installer has not been released yet.
 tested on iPadOS 27.2. Ordinary AFK victory/Next and seasonal copy/battle/defeat
 were tested. Seasonal victory and tablet trials remain unverified. It also loads
 Apple developer support using the app's Python 3.13, including after a device restart.
-Use the v4 installer for this tablet profile; older downloads do not include it.
+The locally built v4 installer targets 12.13.0 only; it must not be applied to
+12.13.7. See the [current mode validation report](ios-mode-validation.md) for the
+newer source work and its remaining tests.
 See the dated follow-up in [test results](ios-review.md) for exact scope.
 
 **Source update (2026-10-03):** See [maintainer review and test results](ios-review.md)

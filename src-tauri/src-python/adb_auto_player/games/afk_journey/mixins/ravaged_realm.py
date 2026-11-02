@@ -10,7 +10,7 @@ from adb_auto_player.games.afk_journey.battle_state import Mode
 from adb_auto_player.games.afk_journey.gui_category import AFKJCategory
 from adb_auto_player.models import ConfidenceValue
 from adb_auto_player.models.decorators import GUIMetadata
-from adb_auto_player.models.geometry import Point
+from adb_auto_player.models.geometry import ReferencePoint
 from adb_auto_player.models.image_manipulation import CropRegions
 from adb_auto_player.models.template_matching import TemplateMatchResult
 
@@ -317,20 +317,24 @@ class RavagedRealmMixin(AFKJourneyBase):
                     logging.info(
                         "Ensuring squad tab bar is scrolled to the left (State 1)..."
                     )
-                    self.swipe_right(y=active_y, sx=200, ex=900, duration=0.5)
+                    self.swipe_right(
+                        y=active_y, sx=200, ex=900, duration=0.5, reference=True
+                    )
                     self.sleep_navigation()
                     scroll_state = state_left
             elif scroll_state != state_right:
                 logging.info(
                     "Ensuring squad tab bar is scrolled to the right (State 2)..."
                 )
-                self.swipe_left(y=active_y, sx=900, ex=200, duration=0.5)
+                self.swipe_left(
+                    y=active_y, sx=900, ex=200, duration=0.5, reference=True
+                )
                 self.sleep_navigation()
                 scroll_state = state_right
 
             click_x = state_coords[scroll_state][faction]
             logging.info(f"Switching to squad: {faction}...")
-            self.tap(Point(click_x, active_y))
+            self.tap(ReferencePoint(click_x, active_y))
             self.sleep_navigation()
             self.sleep_navigation()
             sleep(2)  # Wait for tab expansion transition

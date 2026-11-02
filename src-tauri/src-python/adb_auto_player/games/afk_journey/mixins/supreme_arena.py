@@ -8,7 +8,7 @@ from adb_auto_player.games.afk_journey.base import AFKJourneyBase
 from adb_auto_player.games.afk_journey.gui_category import AFKJCategory
 from adb_auto_player.games.afk_journey.settings import OpponentPosition
 from adb_auto_player.models.decorators import GUIMetadata
-from adb_auto_player.models.geometry import Point
+from adb_auto_player.models.geometry import ReferencePoint
 
 
 class SupremeArenaMixin(AFKJourneyBase):
@@ -133,7 +133,7 @@ class SupremeArenaMixin(AFKJourneyBase):
                 logging.info(
                     "All free Supreme Arena attempts used. Declining purchase."
                 )
-                self.tap(Point(485, 1250))  # Tap X to cancel purchase
+                self.tap(ReferencePoint(485, 1250))  # Tap X to cancel purchase
                 return False
 
             position = self.settings.supreme_arena.opponent_position
@@ -143,7 +143,7 @@ class SupremeArenaMixin(AFKJourneyBase):
                 OpponentPosition.Right: 915,
             }[position]
             logging.debug(f"Tapping {position} opponent card.")
-            self.tap(Point(opponent_x, 950))
+            self.tap(ReferencePoint(opponent_x, 950))
 
             logging.debug("Waiting for Challenge! button on opponent detail screen.")
             challenge = self.wait_for_template(

@@ -8,10 +8,11 @@ import re
 from time import sleep
 
 import cv2
+
 from adb_auto_player.exceptions import AutoPlayerWarningError, GameTimeoutError
 from adb_auto_player.file_loader import SettingsLoader
 from adb_auto_player.models import ConfidenceValue
-from adb_auto_player.models.geometry import Point
+from adb_auto_player.models.geometry import ReferencePoint
 from adb_auto_player.models.ocr import OCRResult
 from adb_auto_player.ocr import OCRBackend, RapidOCRBackend
 from adb_auto_player.ocr.qwen2vl_backend import QwenVLOCRBackend
@@ -82,7 +83,7 @@ class _GuildScanRankingsMixin(_GuildScanIdentityMixin):
             if not date_tabs:
                 logging.warning("No date tabs visible in this view.")
                 logging.info("Scrolling date bar left to reveal older dates...")
-                self.swipe_left(y=758, sx=900, ex=200, duration=0.8)
+                self.swipe_left(y=758, sx=900, ex=200, duration=0.8, reference=True)
                 sleep(1.5)
                 continue
 
@@ -99,7 +100,7 @@ class _GuildScanRankingsMixin(_GuildScanIdentityMixin):
 
             if len(processed_dates) < total_expected:
                 logging.info("Scrolling date bar left to reveal older dates...")
-                self.swipe_left(y=758, sx=900, ex=200, duration=0.8)
+                self.swipe_left(y=758, sx=900, ex=200, duration=0.8, reference=True)
                 sleep(1.5)
 
         return rankings
@@ -216,7 +217,7 @@ class _GuildScanRankingsMixin(_GuildScanIdentityMixin):
                 )
                 break
 
-            self.swipe_up(x=540, sy=1300, ey=1050, duration=1.2)
+            self.swipe_up(x=540, sy=1300, ey=1050, duration=1.2, reference=True)
             sleep(2.5)
 
         observations = self._apply_identity_labels(observations)
@@ -1493,7 +1494,7 @@ class _GuildScanRankingsMixin(_GuildScanIdentityMixin):
             if not phase_tabs:
                 logging.warning("No phase tabs visible in this view.")
                 logging.info("Tapping arrow to reveal older phases...")
-                self.tap(Point(*self._PHASE_TAB_OLDER_ARROW))
+                self.tap(ReferencePoint(*self._PHASE_TAB_OLDER_ARROW))
                 sleep(1.5)
                 continue
 
@@ -1509,7 +1510,7 @@ class _GuildScanRankingsMixin(_GuildScanIdentityMixin):
 
             if not target_phases <= processed_phases:
                 logging.info("Tapping arrow to reveal older phases...")
-                self.tap(Point(*self._PHASE_TAB_OLDER_ARROW))
+                self.tap(ReferencePoint(*self._PHASE_TAB_OLDER_ARROW))
                 sleep(1.5)
 
         self._save_afk_stages_rankings_to_json(rankings)

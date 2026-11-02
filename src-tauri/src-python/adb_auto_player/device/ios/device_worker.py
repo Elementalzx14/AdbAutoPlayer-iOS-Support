@@ -4,9 +4,9 @@ import argparse
 import asyncio
 import importlib.util
 import json
-from pathlib import Path
 import sys
 import time
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -52,9 +52,9 @@ def device_error(exc):
 
 async def serve(args):
     load_transport()
-    from ios_transport.phone import Phone, DeviceLockedError, normalized_point
-    from ios_transport.geometry import Canvas
     from ios_transport.bundles import resolve_bundle
+    from ios_transport.geometry import Canvas
+    from ios_transport.phone import DeviceLockedError, Phone, normalized_point
     from ios_transport.usb_lock import exclusive_run
     from pymobiledevice3.remote.core_device.app_service import AppServiceService
     from pymobiledevice3.remote.core_device.hid_service import (
@@ -71,21 +71,28 @@ async def serve(args):
     with exclusive_run(args.workdir):
         async with Phone(args.workdir) as phone:
 
-            async def screenshot():
+            async def screenshot(force_native=False):
                 nonlocal canvas, native_data, metadata
                 started = time.perf_counter()
+
+                async def capture():
+                    nonlocal native_data
+                    if force_native:
+                        native_data = await phone.screenshot()
+                        return cv2.imdecode(
+                            np.frombuffer(native_data, np.uint8), cv2.IMREAD_COLOR
+                        )
+                    return await phone.capture_frame()
+
                 try:
-                    native_data = await phone.screenshot()
+                    native = await capture()
                 except DeviceLockedError:
                     raise
                 except Exception:
                     # A screenshot has no game side effects. Retry once after reopening
                     # the same paired device. Never retry a tap or launch automatically.
                     await phone.reconnect()
-                    native_data = await phone.screenshot()
-                native = cv2.imdecode(
-                    np.frombuffer(native_data, np.uint8), cv2.IMREAD_COLOR
-                )
+                    native = await capture()
                 if native is None:
                     raise RuntimeError("Invalid iOS screenshot.")
                 h, w = native.shape[:2]
@@ -101,6 +108,10 @@ async def serve(args):
                     "canvas_size": [args.width, args.height],
                     "viewport": canvas.viewport,
                     "capture_seconds": round(time.perf_counter() - started, 4),
+                    "capture_source": "screenshot"
+                    if force_native
+                    else phone.capture_source,
+                    "capture_warning": phone.capture_warning,
                 }
                 # Atomic replacement prevents a partial frame from being consumed.
                 pending = args.session / "frame.pending.bmp"
@@ -153,7 +164,7 @@ async def serve(args):
                     action = request["action"]
                     value = None
                     if action in ("screenshot", "check_orientation", "debug_capture"):
-                        value = await screenshot()
+                        value = await screenshot(force_native=action == "debug_capture")
                         if action == "debug_capture":
                             (args.session / "native.png").write_bytes(native_data)
                     elif action == "tap":

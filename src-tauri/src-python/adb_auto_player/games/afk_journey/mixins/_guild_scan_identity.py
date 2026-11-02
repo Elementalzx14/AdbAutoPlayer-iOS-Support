@@ -18,7 +18,8 @@ from time import sleep
 
 import cv2
 import numpy as np
-from adb_auto_player.models.geometry import Point
+
+from adb_auto_player.models.geometry import Point, ReferencePoint
 from adb_auto_player.models.ocr import OCRResult
 from adb_auto_player.ocr import OCRBackend
 
@@ -216,7 +217,7 @@ class _GuildScanIdentityMixin(_GuildScanNamesMixin):
             logging.warning("Could not read the User ID from the profile panel.")
             return True, None
 
-        self.tap(Point(*self._PROFILE_CLOSE), log=False)
+        self.tap(ReferencePoint(*self._PROFILE_CLOSE), log=False)
         sleep(self._PROFILE_CLOSE_WAIT)
         return True, self._match_duplicate_record(group, user_id, server)
 

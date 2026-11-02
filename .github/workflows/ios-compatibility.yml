@@ -2,10 +2,12 @@ name: iOS Python 3.13 compatibility
 on:
   workflow_dispatch:
   push:
-    branches: [ios-support]
+    branches: [ios-support, ios-all-modes]
   pull_request:
     paths:
       - 'src-tauri/src-python/adb_auto_player/device/**'
+      - 'src-tauri/src-python/adb_auto_player/game/**'
+      - 'src-tauri/src-python/adb_auto_player/models/geometry/**'
       - 'src-tauri/src-python/adb_auto_player/games/afk_journey/**'
       - 'scripts/windows/ios-runtime-overrides.txt'
       - 'scripts/windows/ios-installer/**'
@@ -29,12 +31,12 @@ jobs:
       - name: Import the packaged transport and developer setup
         shell: pwsh
         run: |
-          .venv-ios/Scripts/python.exe -c "import lzfse; from pymobiledevice3.services.mobile_image_mounter import auto_mount; from adb_auto_player.device.ios.phone import Phone; from adb_auto_player.device.ios.geometry import Canvas"
+          .venv-ios/Scripts/python.exe -c "import lzfse; from pymobiledevice3.services.mobile_image_mounter import auto_mount; from adb_auto_player.device.ios.phone import Phone; from adb_auto_player.device.ios.geometry import Canvas; from adb_auto_player.device.ios.video import VideoCapture"
       - name: Device and layout regression tests (no phone required)
         shell: pwsh
         run: |
           $env:PYTHONPATH = (Resolve-Path src-tauri/src-python).Path
-          .venv-ios/Scripts/python.exe -m pytest src-tauri/src-python/tests/test_ios_review.py src-tauri/src-python/tests/test_ios_tablet_connection.py src-tauri/src-python/tests/test_ios_integration.py src-tauri/src-python/tests/game/test_game_closed_detection.py src-tauri/src-python/tests/games/afk_journey/test_ios_layout.py src-tauri/src-python/tests/games/afk_journey/test_ipad_layout.py -q
+          .venv-ios/Scripts/python.exe -m pytest src-tauri/src-python/tests/test_ios_review.py src-tauri/src-python/tests/test_ios_tablet_connection.py src-tauri/src-python/tests/test_ios_integration.py src-tauri/src-python/tests/test_ios_video.py src-tauri/src-python/tests/game src-tauri/src-python/tests/games/afk_journey -q
       - name: Installer recovery and settings preservation
         shell: pwsh
         run: |
