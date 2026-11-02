@@ -15,10 +15,19 @@ from adb_auto_player.exceptions import (
     GenericAdbUnrecoverableError,
 )
 from adb_auto_player.game import Game, _screenshot_mixin
+from adb_auto_player.file_loader import SettingsLoader
+from adb_auto_player.models.pydantic.adb_settings import AdbSettings
 from pydantic import BaseModel
 
 _GAME = "com.farlightgames.igame.gp"
 _LAUNCHER = "app.lawnchair"
+
+
+@pytest.fixture(autouse=True)
+def android_device_settings():
+    """Supply the Android device settings normally initialized by app startup."""
+    with patch.object(SettingsLoader, "adb_settings", return_value=AdbSettings()):
+        yield
 
 # Real parsed output of the `get_running_app` pipeline on MuMuPlayer Android 15
 # with the game open on display 2 and the launcher resumed on display 0.
