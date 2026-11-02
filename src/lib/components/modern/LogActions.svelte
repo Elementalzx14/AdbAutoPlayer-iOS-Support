@@ -1,15 +1,22 @@
 <script lang="ts">
-  import { t } from "$lib/i18n/i18n";
+  import { t } from "#lib/i18n/i18n.ts";
 
   interface Props {
     onClear: () => void;
     onExport: () => void;
+    onOpenScreenshots: () => void;
   }
 
-  let { onClear, onExport }: Props = $props();
+  let { onClear, onExport, onOpenScreenshots }: Props = $props();
 </script>
 
 <div class="actions">
+  <button
+    class="action-btn"
+    onclick={onOpenScreenshots}
+    title={$t("Open the folder with error screenshots")}
+    >{$t("screenshots")}</button
+  >
   <button class="action-btn" onclick={onExport}>{$t("export")}</button>
   <button class="action-btn" onclick={onClear}>{$t("clear")}</button>
 </div>

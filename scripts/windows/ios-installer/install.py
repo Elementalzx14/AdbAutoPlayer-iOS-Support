@@ -93,7 +93,9 @@ def check(app, payload):
         target = inside(app, name)
         if not target.is_file() or digest(target) != expected:
             raise RuntimeError(
-                "Install official Windows x64 AdbAutoPlayer 12.13.0 first, then select its folder."
+                "Install official Windows x64 AdbAutoPlayer "
+                + manifest["version"].split("-ios.", 1)[0]
+                + " first, then select its folder."
             )
     idle(app)
     for item in manifest["files"]:
@@ -174,7 +176,7 @@ def install(app, payload):
         restore_files(app, state)
         (app / PENDING).unlink(missing_ok=True)
         raise
-    print("Installed iOS Support v4 for AdbAutoPlayer 12.13.0.")
+    print("Installed iOS Support " + manifest["version"] + ".")
     print("Uses the app's Python 3.13. No separate iOS runtime was installed.")
     print(
         "Game settings were preserved. Enable iOS in ADB Settings and leave iOS Python Path blank."
@@ -246,7 +248,7 @@ def main():
             restore(app)
         elif args.action == "check":
             check(app, payload)
-            print("Compatible official 12.13.0 installation found. Payload verified.")
+            print("Compatible official installation found. Payload verified.")
         else:
             install(app, payload)
     except Exception as exc:

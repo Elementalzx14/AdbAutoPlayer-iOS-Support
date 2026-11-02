@@ -45,6 +45,14 @@ class DeviceController(Protocol):
         """Return the active game application identifier."""
         ...
 
+    def get_resumed_apps(self) -> list[str]:
+        """Return game applications resumed on the device's displays."""
+        ...
+
+    def get_installed_packages(self, prefix: str) -> list[str]:
+        """Return installed application identifiers matching a prefix."""
+        ...
+
     def start_game(self, package_name: str) -> None:
         """Launch a platform application identifier."""
         ...

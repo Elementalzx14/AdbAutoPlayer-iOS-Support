@@ -72,7 +72,7 @@ def main():
     output.parent.mkdir(parents=True, exist_ok=True)
     prefix = "src-tauri/src-python/adb_auto_player/"
     backend = subprocess.check_output(
-        ["git", "diff", "--name-only", "12.13.0", "--", prefix], cwd=repo, text=True
+        ["git", "diff", "--name-only", "12.13.7", "--", prefix], cwd=repo, text=True
     ).splitlines()
     files = {}
     for file in backend:
@@ -104,7 +104,7 @@ def main():
             files.setdefault(relative, source)
     manifest = {
         "format": 2,
-        "version": "12.13.0-ios.4",
+        "version": "12.13.7-ios.1",
         "files": [],
         "base": {
             name: digest(args.stock / name)
@@ -166,7 +166,7 @@ def main():
         digest(output) + "  " + output.name + "\n"
     )
     output.with_suffix(".manifest.json").write_text(json.dumps(manifest, indent=2))
-    shutil.copy2(here / "README.md", output.parent / "INSTALL-iOS-Support-v4.md")
+    shutil.copy2(here / "README.md", output.parent / "INSTALL-iOS-Support-12.13.7.md")
     print(
         f"Built {output.name}: {len(files)} files; {output.stat().st_size / 1024 / 1024:.1f} MiB"
     )

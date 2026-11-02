@@ -1,4 +1,20 @@
-# Windows iOS Support installer for AdbAutoPlayer 12.13.0
+# Current source build: AdbAutoPlayer 12.13.7
+
+The current builder targets official Windows x64 **12.13.7** and generates manifest
+version `12.13.7-ios.1`. Supply a pristine official 12.13.7 extraction as `--stock`,
+and a separate prepared copy with its existing dependency versions constrained.
+Use the iOS extra and `ios-runtime-overrides.txt`, including the Python 3.13 lzfse
+wheel. Suggested output: `AdbAutoPlayer-iOS-Support-12.13.7-v1-Setup.exe`.
+
+A public installer for 12.13.7 has not been built/released yet. The real installed
+12.13.7 app was updated with an individually audited overlay and verified rollback
+backups; this is not evidence that a redistributable 12.13.7 installer was tested.
+Never apply a 12.13.0 installer or force its stale restore journal over 12.13.7.
+
+The older installer instructions and validation below refer to their exact 12.13.0
+build. They are retained as historical documentation.
+
+# Historical Windows iOS Support installer for AdbAutoPlayer 12.13.0
 
 This is an **add-on installer** for the official Windows x64 12.13.0 release.
 Version 4 adds an experimental M1 iPad Air visual profile and automatically loads

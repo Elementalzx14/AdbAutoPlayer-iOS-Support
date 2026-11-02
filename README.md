@@ -1,5 +1,9 @@
 # AdbAutoPlayer iOS Support
 
+**Current source targets upstream 12.13.7.** The installed-app M1 iPad update was
+validated on that version. Older published 12.13.0 installers must not be applied
+to a 12.13.7 installation; a public 12.13.7 installer has not been released yet.
+
 Experimental Windows USB support for iPhone and iPad, based on
 [AdbAutoPlayer/AdbAutoPlayer](https://github.com/AdbAutoPlayer/AdbAutoPlayer).
 The original desktop interface, game settings, and task engine are preserved.

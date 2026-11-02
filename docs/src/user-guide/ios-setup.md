@@ -1,5 +1,9 @@
 # Integrated iPhone support for AdbAutoPlayer
 
+**Current source base:** 12.13.7. The installed M1 iPad update was verified on
+12.13.7 with settings preserved. The older 12.13.0 installers described below do
+not update 12.13.7. A public 12.13.7 installer has not been released yet.
+
 **iPad source update (2026-11-01):** v4 adds an experimental M1 iPad Air profile
 tested on iPadOS 27.2. Ordinary AFK victory/Next and seasonal copy/battle/defeat
 were tested. Seasonal victory and tablet trials remain unverified. It also loads

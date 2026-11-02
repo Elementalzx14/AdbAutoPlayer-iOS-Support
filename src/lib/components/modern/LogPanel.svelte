@@ -1,17 +1,17 @@
 <script lang="ts">
-  import { t } from "$lib/i18n/i18n";
+  import { t } from "#lib/i18n/i18n.ts";
   import { onMount, tick } from "svelte";
   import { listen } from "@tauri-apps/api/event";
-  import { revealItemInDir } from "@tauri-apps/plugin-opener";
-  import { saveLogFile } from "$pytauri/apiClient";
+  import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
+  import { getDebugScreenshotsDir, saveLogFile } from "#pytauri/apiClient.ts";
   import { homeDir } from "@tauri-apps/api/path";
-  import { profiles, settings, ui } from "$lib/stores.svelte";
-  import { EventNames } from "$lib/log/eventNames";
+  import { profiles, settings, ui } from "#lib/stores.svelte.ts";
+  import { EventNames } from "#lib/log/eventNames.ts";
   import {
     formatMessage,
     logMessageToTextDisplayCardItem,
-  } from "$lib/log/logHelper";
-  import type { TextDisplayCardItem } from "$lib/log/logHelper";
+  } from "#lib/log/logHelper.ts";
+  import type { TextDisplayCardItem } from "#lib/log/logHelper.ts";
   import { Instant } from "@js-joda/core";
   import LogEntry from "./LogEntry.svelte";
   import LogFilters from "./LogFilters.svelte";
@@ -171,6 +171,15 @@
     }
   }
 
+  async function handleOpenScreenshots() {
+    try {
+      const dir = await getDebugScreenshotsDir({ profile_index: profileIndex });
+      await openPath(dir);
+    } catch (e) {
+      console.error("Failed to open screenshots folder:", e);
+    }
+  }
+
   const isTaskRunning = $derived(!!profiles.states[profileIndex]?.active_task);
 
   async function handleLogClick(event: MouseEvent) {
@@ -206,7 +215,11 @@
 >
   <div class="header">
     <LogFilters linesCount={currentEntries.length} />
-    <LogActions onClear={handleClear} onExport={handleExport} />
+    <LogActions
+      onClear={handleClear}
+      onExport={handleExport}
+      onOpenScreenshots={handleOpenScreenshots}
+    />
   </div>
 
   <!-- svelte-ignore a11y_click_events_have_key_events -->

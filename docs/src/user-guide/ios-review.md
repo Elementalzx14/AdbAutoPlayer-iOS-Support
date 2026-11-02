@@ -226,3 +226,25 @@ button icons.
 The v4 installer upgrade/restore test verified all 10,871 installed payload files
 and recovered all 5,990 original disposable-app files, including legacy additions
 and settings, byte-for-byte.
+
+## Installed 12.13.7 integration (2026-11-01)
+
+The real app had auto-updated to 12.13.7 while retaining the older add-on marker.
+The 12.13.0 restore guard correctly refused to overwrite changed files. Upstream
+tag 12.13.7 was merged instead. Its resumed-app and installed-package discovery
+methods are implemented by the Apple controller, and shared lifecycle lookups use
+the mapped bundle identifiers. Android retains upstream's multi-display behavior.
+
+A local overlay audited all 108 target files against upstream tag 12.13.7, the
+recorded previous add-on hashes, or the new payload; no unknown modifications were
+accepted. It preserved the 12.13.7 executable and bundled Python, archived the stale
+marker, and created a new format-2 rollback journal and per-file backups. Both
+profile settings files remained byte-for-byte unchanged. The installed app's own
+Python then passed screenshot capture and tablet Records/Battle recognition.
+
+The merged source passed 137 targeted iOS/navigation/battle, startup-interface and
+installer recovery tests after updating the version-specific error assertion. A live
+12.13.7 startup test discovered and launched the real iOS game bundle successfully.
+The older 12.13.0 v4 EXE remains a tested artifact of its own source revision; it
+must not be used on 12.13.7. The current installer build configuration targets
+12.13.7, but a public installer for that version has not yet been built and released.

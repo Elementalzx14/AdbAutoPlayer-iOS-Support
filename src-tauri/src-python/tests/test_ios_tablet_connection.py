@@ -3,6 +3,7 @@
 import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -16,6 +17,11 @@ from adb_auto_player.device.ios.phone import (
     Phone,
     RemoteControlUnavailableError,
 )
+from adb_auto_player.device.ios.controller import IOSController
+from adb_auto_player.file_loader import SettingsLoader
+from adb_auto_player.games.afk_journey.base import AFKJourneyBase
+from adb_auto_player.models.device import Resolution
+from adb_auto_player.models.pydantic.adb_settings import AdbSettings
 
 
 def make_phone(tmp_path):
@@ -112,3 +118,31 @@ def test_disabled_developer_mode_is_reported_without_mounting(tmp_path):
     phone.lockdown.get_developer_mode_status = AsyncMock(return_value=False)
     with pytest.raises(RuntimeError, match="Enable Developer Mode"):
         asyncio.run(phone.ensure_developer_services())
+
+
+def test_12137_lifecycle_uses_real_ios_bundle_for_installed_app_lookup():
+    with patch.object(
+        SettingsLoader, "adb_settings", return_value=AdbSettings(ios={"enabled": True})
+    ):
+        game = AFKJourneyBase()
+        game._device = MagicMock()
+        game._device.get_installed_packages.return_value = [
+            "com.farlightgames.igame.ios"
+        ]
+        assert game._find_installed_package() == "com.farlightgames.igame.ios"
+        game._device.get_installed_packages.assert_called_once_with(
+            "com.farlightgames.igame.ios"
+        )
+        game._device.get_resumed_apps.return_value = ["com.farlightgames.igame.ios"]
+        assert game.is_game_running()
+
+
+@pytest.mark.parametrize(
+    "app,expected",
+    [(None, []), ("com.farlightgames.igame.ios", ["com.farlightgames.igame.ios"])],
+)
+def test_ios_controller_exposes_12137_resumed_app_interface(app, expected):
+    controller = IOSController(Resolution(1080, 1920))
+    controller.request = MagicMock(return_value=app)
+    assert controller.get_resumed_apps() == expected
+    controller.request.assert_called_once_with("running_app")

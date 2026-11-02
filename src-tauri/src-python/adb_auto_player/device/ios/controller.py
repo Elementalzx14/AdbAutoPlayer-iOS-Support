@@ -194,6 +194,13 @@ class IOSController:
     def get_running_app(self):
         return self.request("running_app")
 
+    def get_resumed_apps(self):
+        app = self.get_running_app()
+        return [app] if app else []
+
+    def get_installed_packages(self, prefix):
+        return self.request("installed_packages", prefix=prefix)
+
     def start_game(self, package_name):
         self.request("start", package=package_name)
 

@@ -169,6 +169,16 @@ async def serve(args):
                         )
                         result = await phone.launch(bundle)
                         process_id = int(result["processToken"]["processIdentifier"])
+                    elif action == "installed_packages":
+                        async with AppServiceService(phone.rsd) as service:
+                            apps = await asyncio.wait_for(service.list_apps(), 20)
+                        value = [
+                            app["bundleIdentifier"]
+                            for app in apps
+                            if str(app.get("bundleIdentifier", "")).startswith(
+                                request["prefix"]
+                            )
+                        ]
                     elif action == "running_app":
                         if process_id is not None:
                             async with AppServiceService(phone.rsd) as service:
