@@ -36,7 +36,7 @@ jobs:
         shell: pwsh
         run: |
           $env:PYTHONPATH = (Resolve-Path src-tauri/src-python).Path
-          .venv-ios/Scripts/python.exe -m pytest src-tauri/src-python/tests/test_ios_review.py src-tauri/src-python/tests/test_ios_tablet_connection.py src-tauri/src-python/tests/test_ios_integration.py src-tauri/src-python/tests/test_ios_video.py src-tauri/src-python/tests/game src-tauri/src-python/tests/games/afk_journey -q
+          .venv-ios/Scripts/python.exe -m pytest src-tauri/src-python/tests/test_ios_review.py src-tauri/src-python/tests/test_ios_tablet_connection.py src-tauri/src-python/tests/test_ios_integration.py src-tauri/src-python/tests/test_ios_video.py src-tauri/src-python/tests/test_ios_input.py src-tauri/src-python/tests/game src-tauri/src-python/tests/games/afk_journey -q
       - name: Installer recovery and settings preservation
         shell: pwsh
         run: |

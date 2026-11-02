@@ -41,6 +41,11 @@ This report distinguishes shared code support from completed live tests.
   screenshots, including mid-task. Normal battle tasks can continue using
   fresh screenshots. This prevents treating slow fallback as a usable fishing
   or matching-card input loop.
+- Held input now leaves capture requests available. A live 0.8-second hold
+  on an unused header allowed 22 fresh captures during the contact and released
+  afterward. A worker deadline also releases the contact if a capture stalls;
+  cancellation replies are identified so they cannot acknowledge a later input.
+  This validates transport concurrency, not fishing gameplay or reaction timing.
 
 ## Coverage inventory
 
@@ -54,7 +59,7 @@ This report distinguishes shared code support from completed live tests.
 | Arena | One original opponent-selection, Battle, Skip and completion flow verified using one existing attempt. Purchases and Sweep were blocked. Exhaustion/free-attempt claiming remains unverified live. |
 | Supreme Arena | Off Season observed; active-season flow remains unverified. |
 | Arcane Labyrinth | Original navigation reached an existing run's gate screen without choosing a gate or starting a new run. Both gate controls matched original assets at approximately 99% through the shared repeated-control search. Gate selection, battles and rewards still need validation. |
-| Union Campaign | Original Battle Modes > Guild Mode > Union Campaign entry verified without pressing Battle or Sweep. Battle/progression still needs validation. |
+| Union Campaign | Original menu entry, formation copy, Battle, defeat and Retry returning to formation verified. No Sweep was pressed. Victory/progression remains unverified. |
 | Ravaged Realm | Shared layout work applies; full event flow still needs validation. |
 | Frostfire Showdown | Fixed inputs/swipes marked for viewport projection; full event flow still needs validation. |
 | Sunlit Showdown | Fixed inputs/swipes marked for viewport projection; full event flow still needs validation. |

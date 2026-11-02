@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from contextlib import AsyncExitStack
+from contextlib import AsyncExitStack, suppress
 from pathlib import Path
 
 import pymobiledevice3.common
@@ -48,7 +48,7 @@ def normalized_point(x, y, width, height):
 
 
 class Phone:
-    """One closeable device connection with serialized screenshot and touch calls."""
+    """One closeable connection with independent capture and input locks."""
 
     def __init__(self, workdir):
         pymobiledevice3.common._HOMEFOLDER = Path(workdir) / "device-cache"
@@ -58,10 +58,14 @@ class Phone:
         self.serial = None
         self.lockdown = None
         self.lock = asyncio.Lock()
+        self.capture_lock = asyncio.Lock()
         self.video = None
         self.video_attempted = False
         self.capture_source = "screenshot"
         self.capture_warning = None
+        self.held_contact = None
+        self._hold_token = None
+        self._hold_timer = None
 
     async def __aenter__(self):
         """Open one trusted USB device and its userspace tunnel."""
@@ -111,6 +115,9 @@ class Phone:
         self.video_attempted = False
         self.capture_source = "screenshot"
         self.capture_warning = None
+        self.held_contact = None
+        self._hold_token = None
+        self._hold_timer = None
         self.rsd = None
         self.lockdown = None
         return await self.__aenter__()
@@ -183,7 +190,7 @@ class Phone:
     async def screenshot(self):
         """Capture a native portrait PNG with a bounded request."""
         await self.ensure_unlocked()
-        async with self.lock:
+        async with self.capture_lock:
             # iOS 27 / pymobiledevice3 11.19.4 stalls on a second capture over
             # the same ScreenCaptureService. Keep the tunnel, reopen this service.
             async with ScreenCaptureService(self.rsd) as service:
@@ -208,6 +215,7 @@ class Phone:
                 self.capture_warning = (
                     "Video stopped; using slower screenshots: " + str(exc)
                 )
+                await self.release_hold_quietly()
                 await self.video.close()
                 self.video = None
                 if self.hid is not None:
@@ -238,6 +246,7 @@ class Phone:
 
     async def launch(self, bundle, restart=False):
         """Open AFK Journey on the phone."""
+        await self.release_hold()
         await self.ensure_unlocked()
         async with self.lock:
             async with AppServiceService(self.rsd) as service:
@@ -250,6 +259,8 @@ class Phone:
         """Send one bounded touch and always release the contact."""
         x, y = normalized_point(x, y, width, height)
         async with self.lock:
+            if self.held_contact is not None:
+                raise ValueError("A touch hold is already active.")
             await self.ensure_touch_session()
             try:
                 await asyncio.wait_for(
@@ -262,6 +273,49 @@ class Phone:
                     self.hid.send_touchscreen(TOUCHSCREEN_STATE_RELEASE, x, y),
                     timeout=10,
                 )
+
+    async def begin_hold(self, x, y, width, height, duration=30):
+        """Start a contact without blocking later screenshot requests."""
+        position = normalized_point(x, y, width, height)
+        duration = float(duration)
+        if not 0 < duration <= 30:
+            raise ValueError("Hold duration must be between 0 and 30 seconds.")
+        async with self.lock:
+            if self.held_contact is not None:
+                raise ValueError("A touch hold is already active.")
+            await self.ensure_touch_session()
+            self.held_contact = position
+            # Ownership stays recorded if sending contact fails, so cleanup can
+            # release an ambiguous contact without replaying it.
+            await asyncio.wait_for(
+                self.hid.send_touchscreen(TOUCHSCREEN_STATE_CONTACT, *position), 10
+            )
+            token = self._hold_token = object()
+
+            async def release_after_duration():
+                await asyncio.sleep(duration)
+                if self._hold_token is token:
+                    await self.release_hold_quietly()
+
+            self._hold_timer = asyncio.create_task(release_after_duration())
+
+    async def release_hold(self):
+        """Release the owned contact once, including during task cancellation."""
+        async with self.lock:
+            position, self.held_contact = self.held_contact, None
+            self._hold_token = None
+            timer, self._hold_timer = self._hold_timer, None
+            if timer is not None and timer is not asyncio.current_task():
+                timer.cancel()
+            if position is not None and self.hid is not None:
+                await asyncio.wait_for(
+                    self.hid.send_touchscreen(TOUCHSCREEN_STATE_RELEASE, *position), 3
+                )
+
+    async def release_hold_quietly(self):
+        """Best-effort release while preserving an existing connection error."""
+        with suppress(Exception):
+            await self.release_hold()
 
     async def ensure_touch_session(self):
         """Open input once and distinguish OS restrictions from USB failures."""
@@ -289,4 +343,5 @@ class Phone:
                 "Check Settings > General > Software Update on the device."
             ) from exc
         # Additional settling time prevents the first tap being dropped.
+        self.stack.push_async_callback(self.release_hold_quietly)
         await asyncio.sleep(0.5)

@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import tempfile
 import threading
+import time
 import weakref
 from pathlib import Path
 
@@ -33,6 +34,9 @@ class IOSController:
     def __init__(self, resolution):
         self.resolution = resolution
         self._lock = threading.RLock()
+        self._input_lock = threading.Lock()
+        self._input_generation = 0
+        self._request_id = 0
         self._responses = queue.Queue()
         self._process = None
         self._session = None
@@ -84,7 +88,9 @@ class IOSController:
     def request(self, action, **values):
         """Serialize device requests and interrupt them when Stop is requested."""
         with self._lock:
-            if self.stop_requested():
+            if action == "touch_up" and self._process is None:
+                return None  # A release must never open a new device session.
+            if action != "touch_up" and self.stop_requested():
                 raise KeyboardInterrupt
             connecting = self._process is None
             if connecting:
@@ -93,9 +99,11 @@ class IOSController:
                     "First use may download support files."
                 )
             self._connect()
+            self._request_id += 1
+            request_id = self._request_id
             try:
                 self._process.stdin.write(
-                    json.dumps({"action": action, **values}) + "\n"
+                    json.dumps({"id": request_id, "action": action, **values}) + "\n"
                 )
                 self._process.stdin.flush()
             except (OSError, ValueError) as exc:
@@ -103,12 +111,19 @@ class IOSController:
                     "iOS worker disconnected. Reconnect and unlock the device, then restart the task."
                 ) from exc
             # First-use developer setup can outlast an ordinary screenshot.
-            timeout_seconds = 180 if connecting else 90
-            for _ in range(timeout_seconds * 4):
-                if self.stop_requested():
+            timeout_seconds = (
+                12 if action == "touch_up" else (180 if connecting else 90)
+            )
+            deadline = time.monotonic() + timeout_seconds
+            while time.monotonic() < deadline:
+                if action != "touch_up" and self.stop_requested():
                     raise KeyboardInterrupt
                 try:
                     result = self._responses.get(timeout=0.25)
+                    # A cancelled request may still finish in the worker. Its
+                    # reply must not acknowledge a later release or capture.
+                    if "id" in result and result["id"] != request_id:
+                        continue
                     break
                 except queue.Empty:
                     continue
@@ -182,29 +197,51 @@ class IOSController:
         )
 
     def tap(self, coordinates):
-        self.request("tap", x=coordinates.x, y=coordinates.y)
+        generation = self._input_generation
+        with self._input_lock:
+            if generation != self._input_generation:
+                return
+            self.request("tap", x=coordinates.x, y=coordinates.y)
 
     click = tap
 
     def swipe(self, start_point, end_point, duration=1.0):
-        self.request(
-            "swipe",
-            x=start_point.x,
-            y=start_point.y,
-            end_x=end_point.x,
-            end_y=end_point.y,
-            duration=duration,
-        )
+        generation = self._input_generation
+        with self._input_lock:
+            if generation != self._input_generation:
+                return
+            self.request(
+                "swipe",
+                x=start_point.x,
+                y=start_point.y,
+                end_x=end_point.x,
+                end_y=end_point.y,
+                duration=duration,
+            )
 
     def hold(self, coordinates, duration=1.0):
-        self.request(
-            "swipe",
-            x=coordinates.x,
-            y=coordinates.y,
-            end_x=coordinates.x,
-            end_y=coordinates.y,
-            duration=duration,
-        )
+        duration = float(duration)
+        if not 0 < duration <= 30:
+            raise ValueError("Hold duration must be between 0 and 30 seconds.")
+        # Keep other inputs serialized, but release the request lock while the
+        # contact is held so vision can continue receiving frames.
+        generation = self._input_generation
+        with self._input_lock:
+            if generation != self._input_generation:
+                return
+            try:
+                self.request(
+                    "touch_down", x=coordinates.x, y=coordinates.y, duration=duration
+                )
+                until = time.monotonic() + duration
+                while time.monotonic() < until:
+                    if generation != self._input_generation:
+                        break
+                    if self.stop_requested():
+                        raise KeyboardInterrupt
+                    time.sleep(min(0.025, max(0, until - time.monotonic())))
+            finally:
+                self.request("touch_up")
 
     def get_running_app(self):
         return self.request("running_app")
@@ -242,6 +279,7 @@ class IOSController:
         return False
 
     def close(self):
+        self._input_generation += 1  # Cancel inputs queued by the previous task.
         if self._process is not None:
             process, self._process = self._process, None
             if process.poll() is None:

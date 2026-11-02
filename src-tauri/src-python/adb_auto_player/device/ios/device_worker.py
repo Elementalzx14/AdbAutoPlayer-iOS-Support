@@ -112,6 +112,7 @@ async def serve(args):
                     if force_native
                     else phone.capture_source,
                     "capture_warning": phone.capture_warning,
+                    "input_held": phone.held_contact is not None,
                 }
                 # Atomic replacement prevents a partial frame from being consumed.
                 pending = args.session / "frame.pending.bmp"
@@ -159,8 +160,10 @@ async def serve(args):
                     )
 
             while line := await asyncio.to_thread(sys.stdin.readline):
+                request_id = None
                 try:
                     request = json.loads(line)
+                    request_id = request.get("id")
                     action = request["action"]
                     value = None
                     if action in ("screenshot", "check_orientation", "debug_capture"):
@@ -168,11 +171,27 @@ async def serve(args):
                         if action == "debug_capture":
                             (args.session / "native.png").write_bytes(native_data)
                     elif action == "tap":
+                        if phone.held_contact is not None:
+                            raise ValueError("A touch hold is already active.")
                         x, y = await point(request["x"], request["y"])
                         await phone.tap(x, y, canvas.native_width, canvas.native_height)
                     elif action == "swipe":
+                        if phone.held_contact is not None:
+                            raise ValueError("A touch hold is already active.")
                         await drag(request)
+                    elif action == "touch_down":
+                        x, y = await point(request["x"], request["y"])
+                        await phone.begin_hold(
+                            x,
+                            y,
+                            canvas.native_width,
+                            canvas.native_height,
+                            duration=request.get("duration", 30),
+                        )
+                    elif action == "touch_up":
+                        await phone.release_hold()
                     elif action in ("select_game", "start"):
+                        await phone.release_hold()
                         bundle = resolve_bundle(
                             request["packages"]
                             if action == "select_game"
@@ -202,6 +221,7 @@ async def serve(args):
                             ):
                                 value = bundle
                     elif action == "stop":
+                        await phone.release_hold()
                         if resolve_bundle([request["package"]]) != bundle:
                             raise ValueError("The requested game is not selected.")
                         if process_id is not None:
@@ -214,9 +234,13 @@ async def serve(args):
                         raise ValueError(
                             "Unsupported Apple device operation: " + action
                         )
-                    print(json.dumps({"value": value}), flush=True)
+                    print(json.dumps({"id": request_id, "value": value}), flush=True)
                 except Exception as exc:
-                    print(json.dumps({"error": device_error(exc)}), flush=True)
+                    await phone.release_hold_quietly()
+                    print(
+                        json.dumps({"id": request_id, "error": device_error(exc)}),
+                        flush=True,
+                    )
 
 
 def main():
