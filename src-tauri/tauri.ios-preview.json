@@ -1,0 +1,25 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "AdbAutoPlayer iOS Support",
+  "version": "12.13.7+ios.4",
+  "app": {
+    "windows": [
+      {
+        "dragDropEnabled": false,
+        "height": 600,
+        "title": "AdbAutoPlayer iOS Support",
+        "visible": true,
+        "width": 800
+      }
+    ]
+  },
+  "bundle": {
+    "createUpdaterArtifacts": false
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": []
+    }
+  }
+}
+

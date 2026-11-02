@@ -25,7 +25,7 @@
   let downloadProgress: number = $state(0);
 
   async function checkUpdate() {
-    if (isUpdating) {
+    if (isUpdating || import.meta.env.VITE_IOS_PREVIEW_BUILD === "1") {
       return;
     }
     try {
@@ -51,6 +51,7 @@
   }
 
   async function startUpdate(): Promise<void> {
+    if (import.meta.env.VITE_IOS_PREVIEW_BUILD === "1") return;
     update = (await check({ timeout: 5000 })) ?? update;
     if (!update) {
       return;
@@ -93,7 +94,7 @@
 
   onMount(() => {
     // Only check for updates if we are running in a Tauri environment
-    if ((window as any).__TAURI_INTERNALS__) {
+    if ((window as any).__TAURI_INTERNALS__ && import.meta.env.VITE_IOS_PREVIEW_BUILD !== "1") {
       checkUpdateTimeout = setTimeout(checkUpdate, 500);
     }
   });
