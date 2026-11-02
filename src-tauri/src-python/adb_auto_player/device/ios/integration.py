@@ -3,9 +3,9 @@
 import importlib.util
 import json
 import os
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 from adb_auto_player.file_loader import SettingsLoader
 from adb_auto_player.ipc import GameGUIOptions
@@ -61,9 +61,16 @@ def worker_environment():
 
 
 def connected_device() -> str | None:
-    """Inspect USB presence without opening a control tunnel or using ADB."""
+    """Inspect Apple discovery without opening a control tunnel or using ADB."""
+    command = [*worker_command(), "--status"]
+    if SettingsLoader.adb_settings().ios.allow_wifi:
+        command += [
+            "--allow-wifi",
+            "--workdir",
+            str(SettingsLoader.get_app_config_dir().parent / "ios-device"),
+        ]
     result = subprocess.run(
-        [*worker_command(), "--status"],
+        command,
         capture_output=True,
         check=False,
         text=True,
@@ -73,7 +80,14 @@ def connected_device() -> str | None:
     )
     if result.returncode:
         raise RuntimeError(
-            "iPhone USB detection failed. Check Apple Mobile "
+            "Apple device detection failed. Check Apple Mobile "
             "Device Service and the iOS runtime."
         )
-    return "iPhone (USB)" if json.loads(result.stdout)["connected"] else None
+    status = json.loads(result.stdout)
+    if not status["connected"]:
+        return None
+    return (
+        "iPhone / iPad (Wi-Fi)"
+        if status.get("connection_type") == "Network"
+        else "iPhone (USB)"
+    )

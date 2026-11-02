@@ -1,13 +1,14 @@
 """Direct USB iPhone transport, tested with pymobiledevice3 11.19.4."""
 
 import asyncio
+import json
 import logging
 from contextlib import AsyncExitStack, suppress
 from pathlib import Path
 
 import pymobiledevice3.common
 from pymobiledevice3 import usbmux
-from pymobiledevice3.exceptions import CoreDeviceError
+from pymobiledevice3.exceptions import CoreDeviceError, MissingValueError
 from pymobiledevice3.lockdown import create_using_usbmux
 from pymobiledevice3.remote.core_device.app_service import AppServiceService
 from pymobiledevice3.remote.core_device.hid_service import (
@@ -23,6 +24,9 @@ from pymobiledevice3.remote.remote_service_discovery import (
     RemoteServiceDiscoveryService,
 )
 from pymobiledevice3.remote.userspace_tunnel import UserspaceRsdTunnel
+
+from .discovery import discovery_target, select_device
+from .wifi import LockdownRsdTunnel, open_wifi_lockdown, prepare_remote_pairing
 
 REMOTE_CONTROL_UNSUPPORTED_CODE = 9021
 REQUIRED_SERVICES = {
@@ -50,12 +54,23 @@ def normalized_point(x, y, width, height):
 class Phone:
     """One closeable connection with independent capture and input locks."""
 
-    def __init__(self, workdir):
+    def __init__(self, workdir, allow_wifi=False):
         pymobiledevice3.common._HOMEFOLDER = Path(workdir) / "device-cache"
         self.stack = AsyncExitStack()
         self.rsd = None
         self.hid = None
         self.serial = None
+        self.target_file = Path(workdir) / "wireless-device.json"
+        self.preferred_serial = None
+        if allow_wifi and self.target_file.is_file():
+            try:
+                value = json.loads(self.target_file.read_text()).get("serial")
+                if isinstance(value, str) and 0 < len(value) < 128:
+                    self.preferred_serial = value
+            except (OSError, ValueError):
+                pass
+        self.allow_wifi = allow_wifi
+        self.connection_type = None
         self.lockdown = None
         self.lock = asyncio.Lock()
         self.capture_lock = asyncio.Lock()
@@ -68,28 +83,65 @@ class Phone:
         self._hold_timer = None
 
     async def __aenter__(self):
-        """Open one trusted USB device and its userspace tunnel."""
-        devices = [
-            d
-            for d in await asyncio.wait_for(usbmux.list_devices(), 5)
-            if d.connection_type == "USB"
-        ]
-        if len(devices) != 1:
-            raise RuntimeError("Connect exactly one unlocked, trusted iPhone by USB.")
+        """Open one trusted device, preferring USB over optional Wi-Fi."""
         try:
-            if self.serial is not None and devices[0].serial != self.serial:
-                raise RuntimeError(
-                    "Reconnect the same iPhone used when the task started."
+            devices = await asyncio.wait_for(usbmux.list_devices(), 5)
+            target = discovery_target(devices, self.serial, self.preferred_serial)
+            eligible = [
+                d
+                for d in devices
+                if d.connection_type
+                in ({"USB", "Network"} if self.allow_wifi else {"USB"})
+            ]
+            if target is not None:
+                eligible = [d for d in eligible if d.serial == target]
+            if not eligible and self.allow_wifi:
+                self.lockdown = await self.stack.enter_async_context(
+                    await open_wifi_lockdown(target)
                 )
-            self.serial = devices[0].serial
-            tunnel = UserspaceRsdTunnel(serial=self.serial)
+                self.serial = self.lockdown.udid
+                self.connection_type = "Network"
+                tunnel = LockdownRsdTunnel(self.lockdown)
+            else:
+                device = select_device(devices, self.allow_wifi, target)
+                self.serial = device.serial
+                self.connection_type = device.connection_type
+                self.lockdown = await self.stack.enter_async_context(
+                    await asyncio.wait_for(
+                        create_using_usbmux(
+                            serial=self.serial,
+                            connection_type=self.connection_type,
+                            autopair=self.connection_type == "USB",
+                        ),
+                        10,
+                    )
+                )
+                tunnel = (
+                    UserspaceRsdTunnel(serial=self.serial)
+                    if self.connection_type == "USB"
+                    else LockdownRsdTunnel(self.lockdown)
+                )
+            await self.ensure_unlocked()
+            if self.allow_wifi and self.connection_type == "USB":
+                try:
+                    enabled = await asyncio.wait_for(
+                        self.lockdown.get_enable_wifi_connections(), 5
+                    )
+                except MissingValueError:
+                    enabled = False
+                if not enabled:
+                    await asyncio.wait_for(
+                        self.lockdown.set_enable_wifi_connections(True), 5
+                    )
+            if self.allow_wifi and self.connection_type == "USB":
+                await prepare_remote_pairing(self.lockdown)
             await asyncio.wait_for(self.stack.enter_async_context(tunnel), timeout=40)
             self.rsd = tunnel.rsd
-            self.lockdown = await self.stack.enter_async_context(
-                await asyncio.wait_for(create_using_usbmux(serial=self.serial), 10)
-            )
-            await self.ensure_unlocked()
             await self.ensure_developer_services()
+            if self.allow_wifi and self.connection_type == "USB":
+                self.target_file.parent.mkdir(parents=True, exist_ok=True)
+                self.target_file.write_text(json.dumps({"serial": self.serial}))
+                self.preferred_serial = self.serial
             return self
         except BaseException:
             await self._close_services()
@@ -132,7 +184,11 @@ class Phone:
     @property
     def metadata(self):
         """Public device characteristics, without names or pairing identifiers."""
-        return {"model": self.rsd.product_type, "ios_version": self.rsd.product_version}
+        return {
+            "model": self.rsd.product_type,
+            "ios_version": self.rsd.product_version,
+            "connection_type": self.connection_type,
+        }
 
     async def ensure_developer_services(self):
         """Load Apple developer support when a restart removed its services."""

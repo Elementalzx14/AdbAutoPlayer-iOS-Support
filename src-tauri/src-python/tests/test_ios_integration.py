@@ -4,7 +4,6 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
-
 from adb_auto_player.device.ios import integration
 from adb_auto_player.device.task_dispatch import execute_for_device
 from adb_auto_player.models.pydantic.adb_settings import AdbSettings
@@ -23,7 +22,12 @@ def test_ios_settings_only_select_the_device(tmp_path):
     config.write_text("[ios]\nenabled = true\nstages = 1\nminutes = 5\nattempts = 2\n")
     settings = AdbSettings.from_toml(config)
     assert settings.ios.enabled
-    assert set(type(settings.ios).model_fields) == {"enabled", "python_path"}
+    assert set(type(settings.ios).model_fields) == {
+        "enabled",
+        "python_path",
+        "allow_wifi",
+    }
+    assert settings.ios.allow_wifi is False
 
 
 def test_android_dispatch_is_unchanged():
@@ -81,8 +85,8 @@ def test_ios_keeps_the_original_menu_and_settings_file():
 
 
 def test_game_chooses_device_backend_without_changing_settings():
-    from adb_auto_player.games.afk_journey.base import AFKJourneyBase
     from adb_auto_player.device.ios.controller import IOSController
+    from adb_auto_player.games.afk_journey.base import AFKJourneyBase
 
     with patch(
         "adb_auto_player.game.game.SettingsLoader.adb_settings",
@@ -95,6 +99,9 @@ def test_game_chooses_device_backend_without_changing_settings():
 
 def test_usb_status_never_opens_a_tunnel():
     with (
+        patch.object(
+            integration.SettingsLoader, "adb_settings", return_value=AdbSettings()
+        ),
         patch.object(integration, "worker_command", return_value=["worker"]),
         patch.object(integration.subprocess, "run") as devices,
     ):
@@ -132,6 +139,7 @@ def test_saved_device_mode_invalidates_profile_cache(tmp_path):
     # Exercise the real desktop invalidator without importing the native UI module.
     import ast
     from pathlib import Path
+
     from adb_auto_player.file_loader import SettingsLoader
     from adb_auto_player.models.decorators import CacheGroup
     from adb_auto_player.tauri_context import TauriContext

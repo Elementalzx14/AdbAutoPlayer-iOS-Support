@@ -79,6 +79,32 @@ blank. Clear an older custom path to use the app's runtime. Keep the phone unloc
 in English portrait mode. Choose tasks and their settings through the normal UI.
 No Mac was used for the tested USB connection.
 
+### Experimental Wi-Fi (development branch)
+
+The `ios-all-modes` branch adds **Allow iPhone / iPad over Wi-Fi** in ADB
+Settings. This is not included in the older public installers.
+
+1. Keep the computer and device on the same home network. Leave iOS enabled.
+2. Enable **Allow iPhone / iPad over Wi-Fi**, save settings, and connect just
+   the intended, unlocked device by USB.
+3. Run **Capture Debug Screenshot** once. This enables wireless lockdown and
+   creates the RemotePairing record through the existing USB trust connection.
+4. Stop automation, unplug USB, and run **Capture Debug Screenshot** again.
+   The log should show **Apple connection: Wi-Fi**. Normal tasks keep their
+   existing Game Settings and current validation limits.
+
+USB is preferred when connected. A new USB setup remembers that device for
+wireless use; a running task never silently switches to another device.
+Direct Bonjour discovery supports hosts whose Apple service does not list network
+devices. Pairing records remain local; no VNC server or Internet relay is opened.
+Turning this option off restricts AdbAutoPlayer to USB but does not remove Apple's
+wireless trust setting or saved pairing records.
+
+The M1 iPad passed cable-free fresh-video and held-input checks on the local
+network. Wi-Fi frame reads were roughly 80–105 ms in the short test, slower than
+the observed USB reads. This is not a long-duration reliability guarantee or
+additional game-mode validation. Guest-network isolation can prevent discovery.
+
 For source builds, use the Python 3.13 instructions in the [maintainer review](ios-review.md).
 `setup-ios.ps1` is retained only for the older standalone Python 3.11 setup.
 

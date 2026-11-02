@@ -60,6 +60,8 @@ class IOSController:
             "--height",
             str(self.resolution.height),
         ]
+        if SettingsLoader.adb_settings().ios.allow_wifi:
+            command.append("--allow-wifi")
         self._process = subprocess.Popen(
             command,
             stdin=subprocess.PIPE,
@@ -95,7 +97,7 @@ class IOSController:
             connecting = self._process is None
             if connecting:
                 logging.info(
-                    "Preparing Apple USB connection and developer support. "
+                    "Preparing Apple connection and developer support. "
                     "First use may download support files."
                 )
             self._connect()
@@ -135,7 +137,11 @@ class IOSController:
 
     @property
     def identifier(self):
-        return "Apple USB"
+        return (
+            "Apple Wi-Fi"
+            if self.metadata.get("connection_type") == "Network"
+            else "Apple USB"
+        )
 
     def get_display_info(self):
         self._update_metadata(self.request("check_orientation"))
@@ -151,6 +157,12 @@ class IOSController:
         if source and source != self.metadata.get("capture_source"):
             logging.info("Apple capture source: %s", source)
         warning = metadata.get("capture_warning")
+        connection = metadata.get("connection_type")
+        if connection and connection != self.metadata.get("connection_type"):
+            logging.info(
+                "Apple connection: %s",
+                "Wi-Fi" if connection == "Network" else connection,
+            )
         if warning and warning != self.metadata.get("capture_warning"):
             logging.warning("Apple capture: %s", warning)
         if not self.metadata:

@@ -42,7 +42,7 @@ class IOSSettings(BaseModel):
     enabled: bool = Field(
         False,
         title="Enable iOS (Windows only)",
-        description="Windows USB connection. Open AFK Journey in "
+        description="Windows USB connection with optional Wi-Fi. Open AFK Journey in "
         "English on an unlocked, "
         "trusted iPhone or iPad with Developer Mode enabled. Tested on iPhone 17 Pro Max "
         "and M1 iPad Air (iPadOS 27.2, portrait). Selects the Apple USB connection; "
@@ -57,6 +57,16 @@ class IOSSettings(BaseModel):
         title="iOS Python Path",
         description="Leave blank to use the app runtime when iOS dependencies are installed; older add-ons use their bundled runtime. "
         "Advanced: optional Python executable with the iOS requirements installed.",
+    )
+    allow_wifi: bool = Field(
+        False,
+        title="Allow iPhone / iPad over Wi-Fi (Experimental)",
+        description="Prefer USB when connected; otherwise use a previously trusted "
+        "device discovered over Wi-Fi. Enable this, "
+        "connect and unlock the device by USB, then run Capture Debug Screenshot "
+        "once to enable wireless connections. Afterward keep the computer and device "
+        "on the same home network. USB can be reconnected at any time. "
+        "Stopping automation before switching connections is recommended.",
     )
 
 

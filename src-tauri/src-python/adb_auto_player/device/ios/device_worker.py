@@ -30,6 +30,8 @@ def device_error(exc):
     lower = detail.lower()
     if type(exc).__name__ == "RemoteControlUnavailableError":
         return str(exc)
+    if type(exc).__name__ == "ConnectionUnavailableError":
+        return str(exc)
     if "connect exactly one" in lower:
         return "iPhone disconnected or multiple devices connected. Connect exactly one iPhone by USB, unlock it, then restart the task."
     if isinstance(exc, ValueError):
@@ -45,7 +47,7 @@ def device_error(exc):
             + detail
         )
     return (
-        "iOS connection failed. Check USB, unlock the device, and ensure Developer Mode is enabled. "
+        "iOS connection failed. Check USB or the Wi-Fi connection, unlock the device, and ensure Developer Mode is enabled. "
         + detail
     )
 
@@ -69,7 +71,7 @@ async def serve(args):
     native_data = None
     metadata = {}
     with exclusive_run(args.workdir):
-        async with Phone(args.workdir) as phone:
+        async with Phone(args.workdir, allow_wifi=args.allow_wifi) as phone:
 
             async def screenshot(force_native=False):
                 nonlocal canvas, native_data, metadata
@@ -249,6 +251,7 @@ def main():
     parser.add_argument("--session", type=Path, required=True)
     parser.add_argument("--width", type=int, required=True)
     parser.add_argument("--height", type=int, required=True)
+    parser.add_argument("--allow-wifi", action="store_true")
     args = parser.parse_args()
     try:
         asyncio.run(serve(args))
