@@ -1,39 +1,38 @@
 # AdbAutoPlayer iOS Support
 
-**Current source targets upstream 12.13.7.** The installed-app M1 iPad update was
-validated on that version. Older published 12.13.0 installers must not be applied
-to a 12.13.7 installation; a public 12.13.7 installer has not been released yet.
+**[Download the full Windows installer — 12.13.7 iOS Preview 4](https://github.com/Elementalzx14/AdbAutoPlayer-iOS-Support/releases/tag/v12.13.7-ios.4).**
 
-Experimental Windows USB support for iPhone and iPad, based on
-[AdbAutoPlayer/AdbAutoPlayer](https://github.com/AdbAutoPlayer/AdbAutoPlayer).
-The original desktop interface, game settings, and task engine are preserved.
-**Enable iOS** selects the iPhone controller and visual profile; attempts,
-formations, and other game options still come from the existing Game Settings.
+This is a complete installer: the app, Python 3.13 runtime, iOS dependencies,
+normal game assets, and USB/Wi-Fi support are included. No official app,
+separate Python installation, or add-on patch is required. Apple device drivers
+are installed separately.
 
-**[Published Windows iOS installer v3 for 12.13.0 (Preview)](https://github.com/Elementalzx14/AdbAutoPlayer-iOS-Support/releases/tag/v12.13.0-ios.3).**
-Install official AdbAutoPlayer 12.13.0 first, close it, then run this add-on.
-The iPad changes below belong to the v4 source preview and its new installer;
-the published v3 download does not contain the tablet profile.
-iOS dependencies are bundled and use the app's existing Python 3.13. The installer
-preserves game settings and provides backups and restoration. Updating the first
-iOS preview? Choose **Restore previous files** in the v4 installer before installing.
+The installer was built from source and passed a clean Windows installation,
+bundled-runtime checks, and app-startup verification. Its checksum and source
+commit are included in the release.
 
-M1 iPad Air on iPadOS 27.2 now has its own visual profile. Ordinary AFK victory and
-Next were tested, along with Season entry, copy, battle, defeat and Retry. Seasonal
-victory, full hero/skin and manual-label coverage, and tablet trials remain unverified.
-Apple developer support loads through the app's Python 3.13; no second runtime is needed.
+The original game settings and task engine remain available. Enable iOS in ADB
+Settings and leave iOS Python Path blank. For wireless setup, connect by USB once,
+enable Allow iPhone / iPad over Wi-Fi, save, and run Capture Debug Screenshot.
+Afterward stop automation, unplug USB, and keep both devices on the same network.
 
-See the [iOS setup and validation guide](docs/src/user-guide/ios-setup.md) and
-[Windows installer instructions](scripts/windows/ios-installer/README.md).
-AFK Stages uses **Battle Modes > AFK Stages**. AFK stage progression and a
-Lightbearer Legend Trial cycle were verified on an English portrait iPhone 17 Pro
-Max running iOS 27. Dura's already-cleared state was verified; fresh Dura battles,
-other towers, other devices, and other task modes need further testing.
+**Latest development source:** [ios-all-modes](https://github.com/Elementalzx14/AdbAutoPlayer-iOS-Support/tree/ios-all-modes).
+See the [full installer instructions](https://github.com/Elementalzx14/AdbAutoPlayer-iOS-Support/blob/ios-all-modes/scripts/windows/standalone/README.md)
+and [mode validation report](https://github.com/Elementalzx14/AdbAutoPlayer-iOS-Support/blob/ios-all-modes/docs/src/user-guide/ios-mode-validation.md).
 
-This is an independent experimental fork, not an official upstream release.
-The source includes upstream **12.13.0**, including its wireless debugging and
-Union Campaign features. The original MIT license and credits
-are retained. Upstream project information follows.
+This is an experimental Windows x64 fork based on upstream 12.13.7, not an
+official upstream release. M1 iPad USB/Wi-Fi capture and input were tested.
+Some game modes remain unverified; packaging does not make every mode tested.
+Fishing and Matching Cards remain unverified.
+
+Close other AdbAutoPlayer instances before starting this build. It uses the
+existing settings namespace. Automatic upstream updates are disabled in the full
+preview to preserve iOS support; use this fork's future full installers to update.
+
+Older 12.13.0 add-on installers are historical downloads and should not be applied
+to this full build. The original MIT license and upstream credits are retained.
+Upstream project information follows.
+
 [![codecov](https://codecov.io/github/AdbAutoPlayer/AdbAutoPlayer/branch/main/graph/badge.svg?token=0VCZKXZO9P)](https://app.codecov.io/github/AdbAutoPlayer/AdbAutoPlayer)  
 
 ## Modern & Customizable Android Game Bot
@@ -67,4 +66,5 @@ Interested in contributing or building from source?
 
 ### iOS maintainer review
 
-The v3 installer includes the [Python 3.13 integration and device/layout review](docs/src/user-guide/ios-review.md). See the review for live test evidence and remaining upstream release checks.
+See the current mode validation report for live test evidence and remaining checks.
+

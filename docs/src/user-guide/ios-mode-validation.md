@@ -2,7 +2,7 @@
 
 Source base: upstream **12.13.7**. Test device: M1 iPad Air (`iPad13,16`),
 iPadOS 27.2, English portrait, 1640 × 2360 native pixels. These changes are
-under development; they have not been packaged into a new public installer.
+packaged in the full Windows preview v12.13.7-ios.4. The installer passed a clean installation, bundled-runtime checks and app-startup verification.
 This report distinguishes shared code support from completed live tests.
 
 ## Shared implementation
